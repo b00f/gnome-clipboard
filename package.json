@@ -1,0 +1,14 @@
+{
+  "name": "gnome-clipboard",
+  "version": "1.0.0",
+  "repository": "git@github.com:b00f/gnome-clipboard.git",
+  "author": "Mostafa <mostafa.sedaghat@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@gi-types/gio": "^2.66.9",
+    "@gi-types/glib": "^2.66.10",
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "typescript": "^4.3.2"
+  }
+}
