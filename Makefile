@@ -1,24 +1,32 @@
-MODULES = extension.js confirmDialog.js locale/ metadata.json stylesheet.css LICENSE.rst README.rst prefs.js schemas/ utils.js
-INSTALLPATH=~/.local/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com/
+EXT_NAME = gnome-clipboard
+UUID = $(EXT_NAME)@b00f.gitlab.com
+BUNDLE = $(UUID).shell-extension.zip
+POT_FILE = ./po/$(EXT_NAME).pot
 
-all: compile-locales compile-settings
+all: pack
 
-compile-settings:
-	glib-compile-schemas --strict --targetdir=schemas/ schemas
+pack:
+	@gnome-extensions pack --force --gettext-domain $(EXT_NAME) \
+		--extra-source=actionBar.js \
+		--extra-source=clipboardItem.js \
+		--extra-source=searchBox.js \
+		--extra-source=scrollMenu.js \
+		--extra-source=confirmDialog.js \
+		--extra-source=utils.js \
+		--extra-source=README.md \
+		--extra-source=LICENSE
 
-compile-locales:
-	$(foreach file, $(wildcard locale/*/LC_MESSAGES/*.po), \
-		msgfmt $(file) -o $(subst .po,.mo,$(file));)
+	@echo extension packed!
 
-update-po-files:
-	xgettext -L Python --from-code=UTF-8 -k_ -kN_ -o clipboard-indicator.pot *.js
-	$(foreach file, $(wildcard locale/*/LC_MESSAGES/*.po), \
-		msgmerge $(file) clipboard-indicator.pot -o $(file);)
+install: pack
+	@gnome-extensions install $(BUNDLE) --force
+	@echo extension installed!
 
-install: all
-	rm -rf $(INSTALLPATH)
-	mkdir -p $(INSTALLPATH)
-	cp -r $(MODULES) $(INSTALLPATH)/
+test: install
+	@dbus-run-session -- gnome-shell --nested --wayland
 
-bundle: all
-	zip -r bundle.zip $(MODULES)
+update-transaltions:
+	@xgettext -L JavaScript --no-wrap --no-location --sort-output --from-code=UTF-8 -k_ -kN_ -o $(POT_FILE) *.js --package-name $(EXT_NAME)
+	@for f in ./po/*.po ; do \
+		msgmerge --no-location -N $$f $(POT_FILE) -o $$f ;\
+	done

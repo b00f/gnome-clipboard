@@ -9,7 +9,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const ConfirmDialog = Me.imports.confirmDialog;
 const Utils = Me.imports.utils;
 
-const Gettext = imports.gettext.domain("clipboard-indicator");
+const Gettext = imports.gettext.domain("gnome-clipboard");
 const _ = Gettext.gettext;
 
 var ActionBar = GObject.registerClass(
@@ -40,7 +40,7 @@ var ActionBar = GObject.registerClass(
       this.spacer = new PopupMenu.PopupBaseMenuItem();
       this.spacer.set_x_expand(true);
       this.spacer.set_y_expand(true);
-      this.actionsBox.add(this.spacer);      
+      this.actionsBox.add(this.spacer);
 
       // Add 'Clear' button which removes all items from cache
       this.clearBtn = new PopupMenu.PopupBaseMenuItem({
