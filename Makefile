@@ -5,14 +5,13 @@ POT_FILE = ./po/$(EXT_NAME).pot
 
 all: pack
 
-pack:
+compile:
+	@gulp compile
+
+pack: compile
 	@gnome-extensions pack --force --gettext-domain $(EXT_NAME) \
-		--extra-source=actionBar.js \
-		--extra-source=clipboardItem.js \
-		--extra-source=searchBox.js \
+		--extra-source=history.js \
 		--extra-source=scrollMenu.js \
-		--extra-source=confirmDialog.js \
-		--extra-source=utils.js \
 		--extra-source=README.md \
 		--extra-source=LICENSE
 
@@ -22,7 +21,7 @@ install: pack
 	@gnome-extensions install $(BUNDLE) --force
 	@echo extension installed!
 
-test: install
+test_wayland: install
 	@dbus-run-session -- gnome-shell --nested --wayland
 
 update-transaltions:
@@ -30,3 +29,6 @@ update-transaltions:
 	@for f in ./po/*.po ; do \
 		msgmerge --no-location -N $$f $(POT_FILE) -o $$f ;\
 	done
+
+listen:
+	journalctl -o cat -n 0 -f "$$(which gnome-shell)" | grep -v warning

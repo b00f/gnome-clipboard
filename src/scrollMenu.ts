@@ -1,13 +1,5 @@
-const St = imports.gi.St;
-const PopupMenu = imports.ui.popupMenu;
-const Gtk = imports.gi.Gtk;
 
-const Gettext = imports.gettext.domain("gnome-clipboard");
-const _ = Gettext.gettext;
-
-
-const ScrollMenu = class ScrollMenu
-  extends PopupMenu.PopupMenuSection {
+class ScrollMenu extends PopupMenu.PopupMenuSection {
   constructor() {
     super();
 
@@ -17,14 +9,14 @@ const ScrollMenu = class ScrollMenu
       style_class: "vfade gt-scroll-view",
       clip_to_allocation: true,
     });
-    this.scroll_view.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+    // this.scroll_view.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
     this.scroll_view_section = new PopupMenu.PopupMenuSection();
     this.scroll_view.add_actor(this.scroll_view_section.actor);
     this.actor.add_actor(this.scroll_view);
   }
 
-  addMenuItem(item) {
-    this.scroll_view_section.addMenuItem(item);
+  addMenuItem(/*item*/) {
+    //this.scroll_view_section.addMenuItem(item);
   }
 
   removeAll() {

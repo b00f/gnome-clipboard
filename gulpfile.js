@@ -4,8 +4,20 @@ var ts = require('gulp-typescript');
 gulp.task('compile', function () {
     return gulp.src('src/*.ts')
         .pipe(ts({
-            noImplicitAny: true,
-            out: 'extension.js'
+            "target": "es2015",
+            "strict": true,
+            "outDir": "./target",
+            "forceConsistentCasingInFileNames": true,
+            "downlevelIteration": true,
+            "lib": [
+                "es2015"
+            ],
+            "pretty": true,
+            "removeComments": true,
+            "incremental": true,
+            "out": "extension.js",
+            "noUnusedLocals": true,
+            "noUnusedParameters": true
         }))
         .pipe(gulp.dest('.'));
 });

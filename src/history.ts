@@ -1,15 +1,16 @@
 
 class cbItem {
-    value: BufferSource;
-    short: string;
-    pinned: boolean;
+    //value: BufferSource;
+    //short: string;
+    //pinned: boolean;
 }
 
 class cbHistory {
-    items: Array<cbItem>
+  //  items: Array<cbItem>
 
     load(path: string) {
-        let file = Gio.file_new_for_path(path);
+        Gio.file_new_for_path(path);
+
 
 
     }
