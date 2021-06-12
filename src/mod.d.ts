@@ -242,6 +242,8 @@ declare namespace Meta {
         remove_workspace(workspace: Workspace, timestamp: number): void;
         reorder_workspace(workspace: Workspace, new_index: number): void;
     }
+
+    enum SelectionType { SELECTION_CLIPBOARD = 0, SELECTION_PRIMARY = 1 }
 }
 
 declare namespace Shell {

@@ -1,0 +1,22 @@
+{
+    "version": "1.2.0",
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "es2015",
+        "strict": true,
+        "outDir": "./build",
+        "forceConsistentCasingInFileNames": true,
+        "downlevelIteration": true,
+        "lib": [
+            "es2015"
+        ],
+        "pretty": true,
+        "removeComments": true,
+        "incremental": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+    },
+    "include": [
+        "*.ts"
+    ]
+}
