@@ -1,9 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist>
-  <schema id="org.gnome.shell.extensions.example" path="/org/gnome/shell/extensions/example/">
+<schemalist gettext-domain="gnome-clipboard">
+  <schema id="org.gnome.shell.extensions.gnome-clipboard" path="/org/gnome/shell/extensions/gnome-clipboard/">
     <!-- See also: https://developer.gnome.org/glib/stable/gvariant-format-strings.html -->
-    <key name="show-indicator" type="b">
-      <default>true</default>
+
+    <key type="b" name="clipboard-timer">
+        <default>false</default>
+        <summary>Read clipboard by timer</summary>
+    </key>
+
+    <key type="i" name="timer-interval">
+        <default>1000</default>
+        <summary>Timer interval (milli second)</summary>
+    </key>
+
+    <key type="i" name="history-size">
+        <default>100</default>
+        <summary>Maximum size of history</summary>
+    </key>
+
+    <key type="u" name="log-level">
+      <default>4</default>
+      <summary>
+          Derive some log4j level/order
+          0 - OFF
+          1 - ERROR
+          2 - WARN
+          3 - INFO
+          4 - DEBUG
+      </summary>
     </key>
   </schema>
 </schemalist>

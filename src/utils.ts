@@ -1,3 +1,61 @@
+
+// @ts-ignore
+export function log_methods(obj) {
+  var result = [];
+  for (var id in obj) {
+    try {
+      if (typeof (obj[id]) == "function") {
+        result.push(id + ": " + obj[id].toString());
+      }
+    } catch (err) {
+      result.push(id + ": inaccessible");
+    }
+  }
+
+  log(result);
+}
+
+// https://stackoverflow.com/questions/9382167/serializing-object-that-contains-cyclic-object-value
+// @ts-ignore
+export function log_object(obj) {
+  let seen: object[] = [];
+  let json = JSON.stringify(obj, function (_key, val) {
+    if (val != null && typeof val == "object") {
+      if (seen.indexOf(val) >= 0) {
+        return;
+      }
+      seen.push(val);
+    }
+    return val;
+  });
+  log(json);
+}
+
+// Javascript implementation of Java’s String.hashCode() method
+// https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+export function hashCode(text: string): number {
+  var hash = 0;
+  if (text.length == 0) return hash;
+  for (let i = 0; i < text.length; i++) {
+    let char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+export function truncate(text: string, length: number): string {
+  text = text.trim();
+  text = text.replace(/\s+/g, ' ');
+
+  if (text.length > length) {
+    text = text.substr(0, length - 1) + '...';
+  }
+
+  return text;
+}
+
+
 // const GLib = imports.gi.GLib;
 // const Gio = imports.gi.Gio;
 // const St = imports.gi.St;
@@ -18,34 +76,6 @@
 // const REGISTRY_PATH = REGISTRY_DIR + '/' + REGISTRY_FILE;
 // const BACKUP_REGISTRY_PATH = REGISTRY_PATH + '~';
 
-// // Print objects... why no dev tools
-// function prettyPrint(name, obj, recurse, _indent) {
-//     let prefix = '';
-//     let indent = typeof _indent === 'number' ? _indent : 0;
-//     for (let i = 0; i < indent; i++) {
-//         prefix += '    ';
-//     }
-
-//     recurse = typeof recurse === 'boolean' ? recurse : true;
-//     if (typeof name !== 'string') {
-//         obj = arguments[0];
-//         recurse = arguments[1];
-//         _indent = arguments[2];
-//         name = obj.toString();
-//     }
-
-//     log(prefix + '--------------');
-//     log(prefix + name);
-//     log(prefix + '--------------');
-//     for (let k in obj) {
-//         if (typeof obj[k] === 'object' && recurse) {
-//             prettyPrint(name + '::' + k, obj[k], true, indent + 1);
-//         }
-//         else {
-//             log(prefix + k, typeof obj[k] === 'function' ? '[Func]' : obj[k]);
-//         }
-//     }
-// }
 
 // // I/O Files
 // function writeRegistry(registry) {

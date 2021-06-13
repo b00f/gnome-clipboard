@@ -1,39 +1,46 @@
+// @ts-ignore
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+
+import * as Cache from 'cache';
+import * as Settings from 'settings';
+import * as HistoryMenu from 'historyMenu';
+import * as SearchBox from 'searchBox';
+import * as ActionBar from 'actionBar';
+import * as utils from 'utils';
+import * as log from 'log';
+
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
-const { Gio, GLib, Pango, St, GObject } = imports.gi;
-const { Shell } = imports.gi;
-const Mainloop = imports.mainloop;
-
+const { St, GObject, Meta, Shell } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-//const ActionBar = Me.imports.actionBar;
-//const ConfirmDialog = Me.imports.confirmDialog;
-//const ScrollMenu = Me.imports.scrollMenu;
-//const SearchBox = Me.imports.searchBox;
-//const Utils = Me.imports.utils;
-
 
 var gnomeClipboardMenu = GObject.registerClass(
   class gnomeClipboardMenu extends PanelMenu.Button {
-    // clipboardIcon: St.Icon;
-    main_menu: ScrollMenu | null = null;
-    search_box: typeof SearchBox | null = null;
-    selection: any | null = null;
+    //historyMenu: HistoryMenu.HistoryMenu | undefined;
+    searchBox: typeof SearchBox | undefined;
+    cache: Cache.Cache | undefined;;
 
     _init() {
-      log(`initializing  ${Me.metadata.name}`);
+      this.clipboard = St.Clipboard.get_default();
+      this.settings = new Settings.ExtensionSettings();
+      this.cache = new Cache.Cache(this.settings.cacheSize());
 
-      super._init(0.0, _("Clipboard"));
+      super._init(0.0, _("Gnome Clipboard"));
+
       this.clipboardIcon = new St.Icon({
         icon_name: 'edit-copy-symbolic',
         style_class: 'popup-menu-icon'
       })
       this.add_actor(this.clipboardIcon);
 
-
       this.setupMenu();
-      this.setupListener();
+
+      if (this.settings.clipboardTimer()) {
+        this.setupTimer();
+      } else {
+        this.setupListener();
+      }
 
       // Clear search when re-open the menu and set focus on search box
       //   this.menu.connect('open-state-changed', function (self, open) {
@@ -49,23 +56,31 @@ var gnomeClipboardMenu = GObject.registerClass(
     }
 
     setupMenu() {
-      this.search_box = new SearchBox();
-      this.menu.addMenuItem(this.search_box);
+      this.menu.box.style_class = 'popup-menu-content gnome-clipboard';
+
+      this.searchBox = new SearchBox.SearchBox();
+      this.menu.addMenuItem(this.searchBox);
 
       let separator1 = new PopupMenu.PopupSeparatorMenuItem();
       this.menu.addMenuItem(separator1);
 
-      this.main_menu = new ScrollMenu();
-      this.menu.addMenuItem(this.main_menu);
+      this.historyMenu = new HistoryMenu.HistoryMenu(this.updateClipboard.bind(this));
+      this.menu.addMenuItem(this.historyMenu);
 
-      // let separator2 = new PopupMenu.PopupSeparatorMenuItem();
-      // this.menu.addMenuItem(separator2);
+      let separator2 = new PopupMenu.PopupSeparatorMenuItem();
+      this.menu.addMenuItem(separator2);
 
-      // // Toolbar
-      // this.action_bar = new ActionBar.ActionBar(this);
-      // this.menu.addMenuItem(this.action_bar);
+      this.actionBar = new ActionBar.ActionBar();
+      this.menu.addMenuItem(this.actionBar);
 
       // this.search_box.onTextChanged(this.onSearchItemChanged.bind(this));
+    }
+
+    updateClipboard(text: string) {
+      log.debug(`update clipboard: ${text}`);
+
+      this.clipboard.set_text(St.ClipboardType.CLIPBOARD, text);
+      this.toggle();
     }
 
     // onSearchItemChanged() {
@@ -87,63 +102,69 @@ var gnomeClipboardMenu = GObject.registerClass(
 
     setupListener() {
       const display = Shell.Global.get().get_display();
+      const selection = display.get_selection();
+      if (selection) {
 
-
-      // MMMM
-      // Move this logic inside setupTracker. Then if failed => setup Timer.
-      // CLIPBOARD_LISTENER  -> check https://github.com/b00f/gnome-shell-extension-clipboard-indicator/commit/ce531c16c3c183c1b7d593893018f0822a61e39f
-      if (typeof display.get_selection === 'function') {
-        const selection = display.get_selection();
-        this.setupTracker(selection);
-      }
-      else {
-        this.setupTimeout();
+        this._selectionOwnerChangedId = selection.connect('owner-changed', (_selection: any, selectionType: any, _selectionSource: any) => {
+          if (selectionType === Meta.SelectionType.SELECTION_CLIPBOARD) {
+            this.updateHistory();
+          }
+        });
       }
     }
 
-    setupTracker(selection: any) {
-      this.selection = selection;
-      this._selectionOwnerChangedId = selection.connect('owner-changed', (selection1: any, selectionType: any, selectionSource: any) => {
-        log(`selection: ${selection1}, ${selectionType}, ${selectionSource})`)
-
-        if (selectionType === Meta.SelectionType.SELECTION_CLIPBOARD) {
-          this.updateHistory();
-        }
-      });
-    }
-
-    setupTimeout() {
+    setupTimer() {
 
     }
 
     updateHistory() {
-      //if (this.actionBar._privateMode()) return; // Private mode, do not.
+      if (this.actionBar._privateMode()) return; // Private mode, do not.
 
+      let menu = this;
+      // St.Clipboard definition:
+      // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/master/src/st/st-clipboard.h
+      this.clipboard.get_text(St.ClipboardType.CLIPBOARD, function (_clipboard: any, text: string) {
+        log.debug(`clipboard content: ${text}`);
 
-
-      // Utils.getClipboardText(function (clipBoard, text) {
-      //   log("clipboard: %s, %s", clipBoard, text)
-      // });
+        menu.historyMenu.addClipboard(text);
+      });
     }
 
     destroy() {
     }
+
+    toggle() {
+      this.menu.toggle();
+    }
+    close() {
+      this.menu.close();
+    }
+
   }
 );
 
+// @ts-ignore
 function init() {
+  log.debug(`initializing...`);
   ExtensionUtils.initTranslations();
 }
 
 let _menu: typeof gnomeClipboardMenu | null = null;
-function enable() {
-  log(`enabling ${Me.metadata.name}`);
 
-  _menu = new gnomeClipboardMenu();
-  Main.panel.addToStatusArea('gnome_clipboard_button', _menu);
+// @ts-ignore
+function enable() {
+  log.debug(`enabling...`);
+
+  if (!_menu) {
+    _menu = new gnomeClipboardMenu();
+    Main.panel.addToStatusArea('gnome_clipboard_button', _menu);
+  }
 }
 
+// @ts-ignore
 function disable() {
+  log.debug(`disabling...`);
+
   if (_menu != null) {
     _menu.destroy();
   }

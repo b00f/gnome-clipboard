@@ -1,25 +1,38 @@
 const St = imports.gi.St;
 const GObject = imports.gi.GObject;
 const ModalDialog = imports.ui.modalDialog;
-const CheckBox = imports.ui.checkBox;
+//const CheckBox = imports.ui.checkBox;
 const Clutter = imports.gi.Clutter;
 
 
 
 
-function openConfirmDialog(title, message, sub_message, ok_label, cancel_label, callback) {
-    new ConfirmDialog(title, message + "\n" + sub_message, ok_label, cancel_label, callback).open();
+function openConfirmDialog(
+  title: string,
+  message: string,
+  sub_message: string,
+  callback: () => void,
+  ok_label = _("OK"),
+  cancel_label = _("Cancel")) {
+  new ConfirmDialog(title, message + "\n" + sub_message, ok_label, cancel_label, callback).open();
 }
 
-const ConfirmDialog = GObject.registerClass(
+export const ConfirmDialog = GObject.registerClass(
   class ConfirmDialog extends ModalDialog.ModalDialog {
 
-    _init(title, desc, ok_label, cancel_label, callback) {
-      super._init();
+    _init(
+      title: string,
+      desc: string,
+      ok_label: string,
+      cancel_label: string,
+      callback: () => void) {
+      super._init({
+        style_class: 'modal-dialog',
+      });
 
       let main_box = new St.BoxLayout({
-        vertical: false,
-        style_class: 'gt-modal-dialog',
+        // MMMM
+       // vertical: false,
       });
       this.contentLayout.add(main_box, { x_fill: true, y_fill: true });
 

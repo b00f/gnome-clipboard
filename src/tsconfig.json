@@ -1,10 +1,10 @@
 {
-    "version": "1.2.0",
+    "version": "1.0.0",
     "compileOnSave": true,
     "compilerOptions": {
         "target": "es2015",
         "strict": true,
-        "outDir": "./build",
+        "outDir": "build",
         "forceConsistentCasingInFileNames": true,
         "downlevelIteration": true,
         "lib": [

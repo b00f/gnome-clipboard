@@ -1,4 +1,7 @@
-var SearchBox = GObject.registerClass(
+const { St, GObject } = imports.gi;
+const PopupMenu = imports.ui.popupMenu
+
+export var SearchBox = GObject.registerClass(
   class SearchBox extends PopupMenu.PopupBaseMenuItem {
     constructor() {
       super();
@@ -15,8 +18,7 @@ var SearchBox = GObject.registerClass(
       // |                                              X |
       // --------------------------------------------------
       this.search_entry = new St.Entry({
-        name: 'searchItem',
-        style_class: 'gt-search-box',
+        style_class: 'search-box',
         can_focus: true,
         hint_text: _('Type here to search...'),
         track_hover: true

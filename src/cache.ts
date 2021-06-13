@@ -1,4 +1,11 @@
-class cbItem {
+// @ts-ignore
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+
+import * as log from 'log';
+
+const GLib = imports.gi.GLib;
+
+export class HistoryItem {
   value: string;
   display: string;
   pinned: boolean;
@@ -10,12 +17,14 @@ class cbItem {
   }
 }
 
-class cbHistory {
+export class Cache {
   path: string = "";
-  items: Array<cbItem>;
+  items: Array<HistoryItem>;
+  size: number;
 
-  constructor() {
-    this.items = new Array<cbItem>();
+  constructor(size: number) {
+    this.items = new Array<HistoryItem>();
+    this.size = size;
   }
 
   setPath(path: string) {
@@ -23,7 +32,7 @@ class cbHistory {
     if (GLib.mkdir_with_parents(path, parseInt('0644', 8))) {
       this.path = path;
     } else {
-      log("Unable to create directory: %s", path);
+      log.warn(`Unable to create directory: ${path}`);
     }
   }
 
@@ -34,7 +43,7 @@ class cbHistory {
     if (success) {
       let json = JSON.parse(contents);
       for (var d of json) {
-        let item = new cbItem(d);
+        let item = new HistoryItem(d);
 
         this.items.push(item);
       }
@@ -47,7 +56,7 @@ class cbHistory {
 
     // Write contents to file asynchronously
     let file = Gio.file_new_for_path(this.path);
-    file.replace_async(null, false, Gio.FileCreateFlags.NONE,
+    file.replace_async("", false, Gio.FileCreateFlags.NONE,
       GLib.PRIORITY_DEFAULT, null, function (obj: any, res: any) {
 
         let stream = obj.replace_finish(res);
@@ -58,11 +67,14 @@ class cbHistory {
             w_obj.write_bytes_finish(w_res);
             stream.close(null);
           });
-      }
+        }, null
     );
   }
 
-  addItem() {
-    
+  addItem(text: string) {
+    if (!text) {
+      return;
+    }
+
   }
 }

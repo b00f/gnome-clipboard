@@ -55,6 +55,26 @@ declare interface GLib {
     timeout_add(priority: number, ms: number, callback: () => Boolean): number;
 }
 
+declare namespace GLib {
+    interface ByteArray {
+        data: number;
+        len: number;
+    }
+
+    interface Bytes {
+        compare(bytes2: Bytes): number;
+        equal(bytes2: Bytes): boolean;
+        get_data(size: number): number[];
+        get_size(): number;
+        hash(): number;
+        new_from_bytes(offset: number, length: number): Bytes;
+        ref(): Bytes;
+        unref(): void;
+        unref_to_array(): number[];
+        unref_to_data(size: number): number[];
+    }
+}
+
 declare namespace GObject {
     interface Object {
         connect(signal: string, callback: (...args: any) => boolean | void): SignalID;
@@ -242,8 +262,6 @@ declare namespace Meta {
         remove_workspace(workspace: Workspace, timestamp: number): void;
         reorder_workspace(workspace: Workspace, new_index: number): void;
     }
-
-    enum SelectionType { SELECTION_CLIPBOARD = 0, SELECTION_PRIMARY = 1 }
 }
 
 declare namespace Shell {
@@ -295,4 +313,61 @@ declare namespace St {
         get_clutter_text(): Clutter.Text;
         set_hint_text(hint: string): void;
     }
+
+    export enum ClipboardType {
+        PRIMARY = 0,
+        CLIPBOARD = 1,
+    }
+
+    export type ClipboardCallbackFunc = (clipboard: Clipboard, text: string) => void;
+    export type ClipboardContentCallbackFunc = (clipboard: Clipboard, bytes: GLib.Bytes | Uint8Array) => void;
+
+    interface Clipboard extends GObject.Object {
+        get_content(type: ClipboardType, mimetype: string, callback: ClipboardContentCallbackFunc): void;
+        get_mimetypes(type: ClipboardType): string[];
+        get_text(type: ClipboardType, callback: ClipboardCallbackFunc): void;
+        set_content(type: ClipboardType, mimetype: string, bytes: GLib.Bytes | Uint8Array): void;
+        set_text(type: ClipboardType, text: string): void;
+        get_default(): Clipboard;
+    }
+}
+
+declare namespace Gio {
+    interface AsyncResult {
+        get_source_object () : GObject.Object;
+        get_user_data () : any;
+        is_tagged (source_tag: any) : boolean;
+        legacy_propagate_error () : boolean;
+    }
+
+    interface FileOutputStream {
+    }
+
+    interface AsyncReadyCallback {
+        (source_object: GObject.Object, res: AsyncResult, user_data: any) : void;
+    }
+
+    interface Cancellable extends GObject.Object {
+        cancel(): void;
+    }
+
+    interface File {
+        load_contents(cancellable: Cancellable | null): any[];
+        replace (etag: string, make_backup: boolean, flags: FileCreateFlags, cancellable: Cancellable) : FileOutputStream;
+        replace_async (etag: string, make_backup: boolean, flags: FileCreateFlags, io_priority: number, cancellable: Cancellable | null, callback: AsyncReadyCallback, user_data: any) : void;
+        replace_contents (contents: number[], length: number, etag: string, make_backup: boolean, flags: FileCreateFlags, new_etag: string, cancellable: Cancellable) : boolean;
+        replace_contents_async (contents: number[], length: number, etag: string, make_backup: boolean, flags: FileCreateFlags, cancellable: Cancellable, callback: AsyncReadyCallback, user_data: any) : void;
+        replace_contents_bytes_async (contents: GLib.Bytes, etag: string, make_backup: boolean, flags: FileCreateFlags, cancellable: Cancellable, callback: AsyncReadyCallback, user_data: any) : void;
+        replace_contents_finish (res: AsyncResult, new_etag: string) : boolean;
+        replace_finish (res: AsyncResult) : FileOutputStream;
+
+    }
+
+    enum FileCreateFlags {
+        NONE = 0,
+        PRIVATE = 1,
+        REPLACE_DESTINATION = 2
+    }
+
+    function file_new_for_path(path: string): File;
 }

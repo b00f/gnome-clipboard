@@ -1,6 +1,7 @@
 #!/bin/sh
 
-set -ex
+# Uncommetn this if you want to see the commands
+# set -ex
 
 pwd=$(pwd)
 
@@ -14,18 +15,15 @@ transpile() {
         | sed -E "s/import \* as (\w+) from '(\w+)'/const \1 = Me.imports.\2/g" > ${dest}
 }
 
-glib-compile-schemas schemas &
-
 rm -rf dist src/build
-mkdir -p dist
+mkdir -p dist/
 
 # Transpile to JavaScript
-tsc --p src &
+tsc --p ./src &
 
 wait
 
 # Convert JS to GJS-compatible scripts
-
 cp -r README.md LICENSE metadata.json schemas src/*.css po dist &
 
 for src in $(find src/build -name '*.js'); do

@@ -1,40 +1,30 @@
-.clipboard-indicator-icon.private-mode {
-    color: rgba(255,255,255,0.3);
+
+.gnome-clipboard .modal-dialog {
+    min-width: 400px;
 }
 
-.ci-notification-label {
-    font-weight: bold;
-    color: #ffffff;
-    background-color: rgba(10,10,10,0.7);
-    border-radius: 6px;
-    font-size:2em;
-    padding:.5em;
-    width:400px;
+.gnome-clipboard .scroll-view {
+    height: 500px;
+    width: 360px;
 }
 
-.popup-menu-item .ci-action-btn StIcon {
-    icon-size:16px;
+.gnome-clipboard .search-box {
+    width: auto;
 }
 
-.ci-history-menu-section {
-    max-height:450px;
+.gnome-clipboard .action-box {
+    padding: 0px;
+    margin: 0px;
 }
 
-.ci-action-bar-box {
-    padding-top: 0px;
-    padding-bottom: 0px;
+.gnome-clipboard .action-btn {
+    width: auto;
 }
 
-.ci-action-bar-box-layout {
+.gnome-clipboard .action-box-layout {
+    width: auto;
 }
 
-.ci-action-bar-btn {
-    padding-top: 0px;
-    padding-bottom: 0px;
-    padding-right: 6px;
-    padding-left: 6px;
-}
-
-.ci-action-bar-btn StIcon{
-    icon-size:24px;
+.gnome-clipboard .trash-item {
+    width: auto;
 }

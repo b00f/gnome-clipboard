@@ -1,29 +1,18 @@
 const St = imports.gi.St;
 const PopupMenu = imports.ui.popupMenu;
 const GObject = imports.gi.GObject;
-const Clutter = imports.gi.Clutter;
-const Lang = imports.lang;
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const ConfirmDialog = Me.imports.confirmDialog;
-const Utils = Me.imports.utils;
-
-const Gettext = imports.gettext.domain("gnome-clipboard");
-const _ = Gettext.gettext;
-
-var ActionBar = GObject.registerClass(
+export var ActionBar = GObject.registerClass(
   class ActionBar extends PopupMenu.PopupBaseMenuItem {
     _init() {
       super._init({
         activate: false,
         hover: false,
-        style_class: 'ci-action-bar-box',
+        style_class: 'action-bar',
       })
 
       this.actionsBox = new St.BoxLayout({
         vertical: false,
-        style_class: 'ci-action-bar-box-layout',
       });
 
       this.actionsBox.set_x_expand(true);
@@ -49,7 +38,7 @@ var ActionBar = GObject.registerClass(
 
 
       this.clearIcon = new St.Icon({
-        icon_name: "edit-delete-all-symbolic",
+        icon_name: "edit-clear",
         style_class: 'popup-menu-icon',
         hover: true,
 
@@ -67,7 +56,7 @@ var ActionBar = GObject.registerClass(
       });
 
       this.settingsIcon = new St.Icon({
-        icon_name: "applications-system-symbolic",
+        icon_name: "applications-system",
         style_class: 'popup-menu-icon',
         hover: true,
 
@@ -81,20 +70,20 @@ var ActionBar = GObject.registerClass(
       this.actor.add(this.actionsBox);
     }
 
-    _registerPrivateModeSwitch(callback) {
-      this.privateModeBtn.connect('toggled', (obj) => {
+    _registerPrivateModeSwitch(callback: (state: any) => void) {
+      this.privateModeBtn.connect('toggled', (obj: any) => {
         callback(obj.state);
       });
     }
 
-    _registerRemoveAll(callback) {
-      this.clearBtn.connect('activate', (obj) => {
+    _registerRemoveAll(callback: () => void) {
+      this.clearBtn.connect('activate', (_obj: any) => {
         callback();
       });
     }
 
-    _registerOpenSettings(callback) {
-      this.settingsBtn.connect('activate', (obj) => {
+    _registerOpenSettings(callback: () => void) {
+      this.settingsBtn.connect('activate', (_obj: any) => {
         callback();
       });
     }
