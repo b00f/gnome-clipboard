@@ -38,7 +38,7 @@ export var ActionBar = GObject.registerClass(
 
 
       this.clearIcon = new St.Icon({
-        icon_name: "edit-clear",
+        icon_name: "gtk-clear-symbolic",
         style_class: 'popup-menu-icon',
         hover: true,
 
@@ -56,7 +56,7 @@ export var ActionBar = GObject.registerClass(
       });
 
       this.settingsIcon = new St.Icon({
-        icon_name: "applications-system",
+        icon_name: "gtk-preferences-symbolic",
         style_class: 'popup-menu-icon',
         hover: true,
 

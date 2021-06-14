@@ -2,32 +2,26 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 import * as log from 'log';
+import * as utils from 'utils';
+import * as ClipboardData from 'clipboardData';
 
 const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 
-export class HistoryItem {
-  value: string;
-  display: string;
-  pinned: boolean;
-
-  constructor(d: any) {
-    this.value = d.value;
-    this.display = d.display;
-    this.pinned = (d.pinned == "1") ? true : false;
-  }
-}
 
 export class Cache {
   path: string = "";
-  items: Array<HistoryItem>;
-  size: number;
 
-  constructor(size: number) {
-    this.items = new Array<HistoryItem>();
-    this.size = size;
+  constructor() {
+    utils.log_methods(GLib);
+    log.debug("--------------------");
+    let file = Gio.file_new_for_path(".");
+    utils.log_methods(file);
   }
 
   setPath(path: string) {
+    utils.log_methods(GLib);
+    utils.log_methods(Gio);
     // Make sure path exists
     if (GLib.mkdir_with_parents(path, parseInt('0644', 8))) {
       this.path = path;
@@ -36,45 +30,21 @@ export class Cache {
     }
   }
 
-  load() {
+  load(): ClipboardData.ClipboardData[] {
     let file = Gio.file_new_for_path(this.path);
 
+    // },replace_contents: function replace_contents(contents, etag, make_backup, flags, cancellable) {
     let [success, contents] = file.load_contents(null);
     if (success) {
-      let json = JSON.parse(contents);
-      for (var d of json) {
-        let item = new HistoryItem(d);
-
-        this.items.push(item);
-      }
+      return JSON.parse(contents);
     }
+    return [];
   }
 
-  save() {
-    let json = JSON.stringify(this.items);
-    let contents = new GLib.Bytes(json);
-
-    // Write contents to file asynchronously
+  save(history: ClipboardData.ClipboardData[]) {
+    let json = JSON.stringify(history);
     let file = Gio.file_new_for_path(this.path);
-    file.replace_async("", false, Gio.FileCreateFlags.NONE,
-      GLib.PRIORITY_DEFAULT, null, function (obj: any, res: any) {
-
-        let stream = obj.replace_finish(res);
-
-        stream.write_bytes_async(contents, GLib.PRIORITY_DEFAULT,
-          null, function (w_obj: any, w_res: any) {
-
-            w_obj.write_bytes_finish(w_res);
-            stream.close(null);
-          });
-        }, null
-    );
+    file.replace_contents(json, "", true, null);
   }
 
-  addItem(text: string) {
-    if (!text) {
-      return;
-    }
-
-  }
 }

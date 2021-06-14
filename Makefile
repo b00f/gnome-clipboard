@@ -24,6 +24,7 @@ pack: compile
 		--extra-source=historyMenu.js \
 		--extra-source=confirmDialog.js \
 		--extra-source=menuItem.js \
+		--extra-source=clipboardData.js \
 		--extra-source=cache.js \
 		--extra-source=searchBox.js \
 		--extra-source=actionBar.js \

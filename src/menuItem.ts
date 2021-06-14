@@ -1,36 +1,26 @@
+// @ts-ignore
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+
 const St = imports.gi.St;
 const PopupMenu = imports.ui.popupMenu;
 const GObject = imports.gi.GObject;
 const Clutter = imports.gi.Clutter;
 
-
-export class MenuItemInfo {
-  id: number;
-  text: string;
-  display: string;
-  pinned: boolean;
-
-  constructor(id: number, text: string, display: string) {
-    this.id = id;
-    this.text = text;
-    this.display = display;
-    this.pinned = false;
-  }
-}
+import * as ClipboardData from 'clipboardData';
 
 
 export var MenuItem = GObject.registerClass(
   class MenuItem extends PopupMenu.PopupBaseMenuItem {
     _init(
-      info: MenuItemInfo,
+      data: ClipboardData.ClipboardData,
       onActivate: (item: MenuItem) => void,
       onRemove: (item: MenuItem) => void,
       onPin: (item: MenuItem) => void) {
       super._init()
 
-      this.info = info;
+      this.data = data;
 
-      let label = new St.Label({ text: this.info.display });
+      let label = new St.Label({ text: this.data.display() });
       this.add_child(label);
       this.connect('activate', () => {
         onActivate(this);
@@ -38,7 +28,7 @@ export var MenuItem = GObject.registerClass(
 
       // pin button
       let pinIcon = new St.Icon({
-        icon_name: "edit-pin-symbolic",
+        icon_name: "view-pin-symbolic",
         style_class: 'popup-menu-icon'
       });
 

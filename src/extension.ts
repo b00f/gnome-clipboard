@@ -24,7 +24,7 @@ var gnomeClipboardMenu = GObject.registerClass(
     _init() {
       this.clipboard = St.Clipboard.get_default();
       this.settings = new Settings.ExtensionSettings();
-      this.cache = new Cache.Cache(this.settings.cacheSize());
+      this.cache = new Cache.Cache();
 
       super._init(0.0, _("Gnome Clipboard"));
 

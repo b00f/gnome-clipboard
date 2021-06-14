@@ -4,6 +4,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 import * as ScrollMenu from 'scrollMenu';
 import * as MenuItem from 'menuItem';
 import * as utils from 'utils';
+import * as ClipboardData from 'clipboardData';
 
 const PopupMenu = imports.ui.popupMenu;
 
@@ -27,11 +28,10 @@ export class HistoryMenu
 
     let item = this.items.get(id);
     if (item === undefined) {
-      let display = utils.truncate(text, 32);
-      let info = new MenuItem.MenuItemInfo(id, text, display)
+      let data = new ClipboardData.ClipboardData(text)
 
       item = new MenuItem.MenuItem(
-        info,
+        data,
         this.onActivateItem.bind(this),
         this.onRemoveItem.bind(this),
         this.onPinItem.bind(this)
@@ -39,10 +39,12 @@ export class HistoryMenu
 
       super.addMenuItem(item);
       this.items.set(id, item);
+    } else {
+      item.data.usage++;
     }
+
     this.clearOrnament();
     item.setOrnament(PopupMenu.Ornament.DOT)
-    item.currentlySelected = true;
   }
 
   clear() {
@@ -54,10 +56,16 @@ export class HistoryMenu
   }
 
   onPinItem(item: typeof MenuItem.MenuItem) {
-    item.info.pinned = true;
+    item.data.pinned = true;
   }
 
   onActivateItem(item: typeof MenuItem.MenuItem) {
-    this.updateClipboard(item.info.text);
+    this.updateClipboard(item.data.text);
+  }
+
+  loadHistory(history ClipboardData.ClipboardData[]) {
+    history.foreach(function(item)) {
+      this.addMenuItem(item)
+    }
   }
 };
