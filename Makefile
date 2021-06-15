@@ -25,7 +25,7 @@ pack: compile
 		--extra-source=confirmDialog.js \
 		--extra-source=menuItem.js \
 		--extra-source=clipboardData.js \
-		--extra-source=cache.js \
+		--extra-source=store.js \
 		--extra-source=searchBox.js \
 		--extra-source=actionBar.js \
 		--extra-source=settings.js \

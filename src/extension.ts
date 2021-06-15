@@ -1,7 +1,7 @@
 // @ts-ignore
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
-import * as Cache from 'cache';
+import * as Store from 'store';
 import * as Settings from 'settings';
 import * as HistoryMenu from 'historyMenu';
 import * as SearchBox from 'searchBox';
@@ -12,19 +12,18 @@ import * as log from 'log';
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
-const { St, GObject, Meta, Shell } = imports.gi;
+const { St, GObject, Meta, Shell, GLib } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 var gnomeClipboardMenu = GObject.registerClass(
   class gnomeClipboardMenu extends PanelMenu.Button {
-    //historyMenu: HistoryMenu.HistoryMenu | undefined;
-    searchBox: typeof SearchBox | undefined;
-    cache: Cache.Cache | undefined;;
 
     _init() {
       this.clipboard = St.Clipboard.get_default();
       this.settings = new Settings.ExtensionSettings();
-      this.cache = new Cache.Cache();
+
+      let path = GLib.get_user_cache_dir() + '/' + Me.uuid;
+      this.store = new Store.Store(path);
 
       super._init(0.0, _("Gnome Clipboard"));
 
@@ -41,6 +40,8 @@ var gnomeClipboardMenu = GObject.registerClass(
       } else {
         this.setupListener();
       }
+
+      this.historyMenu.loadHistory(this.store.load());
 
       // Clear search when re-open the menu and set focus on search box
       //   this.menu.connect('open-state-changed', function (self, open) {

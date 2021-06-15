@@ -55,7 +55,6 @@ export function truncate(text: string, length: number): string {
   return text;
 }
 
-
 // const GLib = imports.gi.GLib;
 // const Gio = imports.gi.Gio;
 // const St = imports.gi.St;

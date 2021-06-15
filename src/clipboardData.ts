@@ -15,6 +15,10 @@ export class ClipboardData {
     this.pinned = false;
   }
 
+  id(): number {
+    return utils.hashCode(this.text);
+  }
+
   display(): string {
     return utils.truncate(this.text, 32);
   }
