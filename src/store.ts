@@ -3,7 +3,6 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 import * as log from 'log';
 import * as utils from 'utils';
-import * as ClipboardData from 'clipboardData';
 
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
@@ -23,29 +22,31 @@ export class Store {
     }
   }
 
-  load(): ClipboardData.ClipboardData[] {
+  load(): any {
     log.debug(`try to load history.`);
 
-    let history: ClipboardData.ClipboardData[] = [];
+    let history: any = [];
     try {
       let file = Gio.file_new_for_path(this.path);
       let [success, contents] = file.load_contents(null);
       if (success && contents) {
-        history = JSON.parse(contents);
+        history = JSON.parse(imports.byteArray.toString(contents));
       }
     } catch (e) {
       log.error(`an exception occurred: ${e}`);
     }
+
+    log.debug(`history: ${history}`);
+
     return history;
   }
 
-  save(history: ClipboardData.ClipboardData[]) {
+  save(history: any) {
     log.debug(`try to save history.`);
 
     try {
       let json = JSON.stringify(history);
-      let contents = new GLib.Bytes(json);
-      GLib.file_set_contents(this.path, contents);
+      GLib.file_set_contents(this.path, json);
     } catch (e) {
       log.error(`an exception occurred: ${e}`);
     }

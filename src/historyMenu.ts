@@ -3,19 +3,22 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 import * as ScrollMenu from 'scrollMenu';
 import * as MenuItem from 'menuItem';
-import * as ClipboardData from 'clipboardData';
+import * as utils from 'utils';
+import * as log from 'log';
 
 const PopupMenu = imports.ui.popupMenu;
 
 export class HistoryMenu
   extends ScrollMenu.ScrollMenu {
-  history: Map<number, typeof MenuItem.MenuItem> = new Map();
+  lookup: Map<number, MenuItem.ClipboardInfo> = new Map();
+  selectedID: number;
   updateClipboard: (text: string) => void;
 
   constructor(updateClipboard: (text: string) => void) {
     super()
 
     this.updateClipboard = updateClipboard;
+    this.selectedID = 0;
   }
 
   addClipboard(text: string) {
@@ -23,34 +26,50 @@ export class HistoryMenu
       return;
     }
 
-    let data = new ClipboardData.ClipboardData(text);
-    let item = this._addMenuItem(data);
+    this._addToHistory(text, 1, false);
 
-    this.clearOrnament();
-    item.setOrnament(PopupMenu.Ornament.DOT)
+    this._rebuildMenu();
   }
 
-  _addMenuItem(data: ClipboardData.ClipboardData): typeof MenuItem.MenuItem {
-    let id = data.id();
-    let item = this.history.get(id);
-    if (item === undefined) {
-      item = new MenuItem.MenuItem(
-        data,
+  _rebuildMenu() {
+    super.removeAll();
+
+    let items = new Array();
+    this.lookup.forEach((cbInfo, _) => {
+      let item = new MenuItem.MenuItem(
+        cbInfo,
         this.onActivateItem.bind(this),
         this.onRemoveItem.bind(this),
         this.onPinItem.bind(this)
       );
-      super.addMenuItem(item);
-      this.history.set(id, item);
-    } else {
-      item.data.usage++;
-    }
 
-    return item;
+      if (cbInfo.id() == this.selectedID) {
+        item.setOrnament(PopupMenu.Ornament.DOT)
+      }
+      items.push(item);
+    });
+
+    // TODO: sort
+
+    items.forEach((item, _) => {
+      super.addMenuItem(item);
+    });
   }
 
-  clear() {
-    super.removeAll();
+  _addToHistory(text: string, usage: number, pinned: boolean) {
+    log.debug(`adding '${text}'`);
+
+    let id = utils.hashCode(text);
+    let cbInfo = this.lookup.get(id);
+    if (cbInfo === undefined) {
+      cbInfo = new MenuItem.ClipboardInfo(
+        text, usage, pinned
+      );
+
+      this.lookup.set(id, cbInfo);
+    } else {
+      cbInfo.usage++;
+    }
   }
 
   onRemoveItem(item: typeof MenuItem.MenuItem) {
@@ -58,28 +77,34 @@ export class HistoryMenu
   }
 
   onPinItem(item: typeof MenuItem.MenuItem) {
-    item.data.pinned = true;
+    item.clipboardData.pinned = true;
   }
 
   onActivateItem(item: typeof MenuItem.MenuItem) {
-    this.updateClipboard(item.data.text);
+    this.updateClipboard(item.clipboardData.text);
   }
 
-  loadHistory(history: ClipboardData.ClipboardData[]) {
-    history.forEach((data) => {
-      this.addMenuItem(data);
-    })
+  loadHistory(history: any) {
+    history.forEach((value: any) => {
+      this._addToHistory(
+        value.text,
+        value.usage,
+        value.pinned
+      );
+    });
+
+    this._rebuildMenu();
   }
 
-  getHistory(onlyPinned: boolean): ClipboardData.ClipboardData[] {
-    let history: ClipboardData.ClipboardData[] = [];
-    this.history.forEach((data, _) => {
+  getHistory(onlyPinned: boolean): any {
+    let history: any = [];
+    this.lookup.forEach((cbInfo, _) => {
       if (onlyPinned) {
-        if (data.pinned) {
-          history.push(data);
+        if (cbInfo.pinned) {
+          history.push(cbInfo);
         }
-      } else  {
-        history.push(data);
+      } else {
+        history.push(cbInfo);
       }
     })
     return history;

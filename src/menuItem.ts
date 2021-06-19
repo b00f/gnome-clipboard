@@ -1,26 +1,46 @@
 // @ts-ignore
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
+import * as utils from 'utils';
+
 const St = imports.gi.St;
 const PopupMenu = imports.ui.popupMenu;
 const GObject = imports.gi.GObject;
 const Clutter = imports.gi.Clutter;
 
-import * as ClipboardData from 'clipboardData';
 
+export class ClipboardInfo {
+  text: string;
+  usage: number;
+  pinned: boolean;
+
+  constructor(text: string, usage: number, pinned: boolean) {
+    this.text = text;
+    this.usage = usage;
+    this.pinned = pinned;
+  }
+
+  id(): number {
+    return utils.hashCode(this.text);
+  }
+
+  display(): string {
+    return utils.truncate(this.text, 32);
+  }
+}
 
 export var MenuItem = GObject.registerClass(
   class MenuItem extends PopupMenu.PopupBaseMenuItem {
     _init(
-      data: ClipboardData.ClipboardData,
+      cbInfo: ClipboardInfo,
       onActivate: (item: MenuItem) => void,
       onRemove: (item: MenuItem) => void,
       onPin: (item: MenuItem) => void) {
       super._init()
 
-      this.data = data;
+      this.cbInfo = cbInfo;
 
-      let label = new St.Label({ text: this.data.display() });
+      let label = new St.Label({ text: cbInfo.display() });
       this.add_child(label);
       this.connect('activate', () => {
         onActivate(this);

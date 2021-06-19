@@ -132,6 +132,7 @@ var gnomeClipboardMenu = GObject.registerClass(
     }
 
     destroy() {
+      this.store.save(this.historyMenu.getHistory(false));
     }
 
     toggle() {
@@ -140,7 +141,6 @@ var gnomeClipboardMenu = GObject.registerClass(
     close() {
       this.menu.close();
     }
-
   }
 );
 
@@ -166,7 +166,7 @@ function enable() {
 function disable() {
   log.debug(`disabling...`);
 
-  if (_menu != null) {
+  if (_menu) {
     _menu.destroy();
   }
 }
