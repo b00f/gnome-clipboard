@@ -26,8 +26,13 @@ export class HistoryMenu
       return;
     }
 
-    this._addToHistory(text, 1, false);
+    let id = utils.hashCode(text);
+    if (id == this.selectedID) {
+      return
+    }
 
+    this.selectedID = id;
+    this._addToHistory(text, 1, false);
     this._rebuildMenu();
   }
 
