@@ -34,5 +34,9 @@
           4 - DEBUG
       </summary>
     </key>
+
+    <key name="show-indicator" type="b">
+      <default>true</default>
+    </key>
   </schema>
 </schemalist>
