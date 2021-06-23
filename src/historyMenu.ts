@@ -62,8 +62,6 @@ export class HistoryMenu
   }
 
   _addToHistory(text: string, usage: number, pinned: boolean) {
-    log.debug(`adding '${text}'`);
-
     let id = utils.hashCode(text);
     let cbInfo = this.lookup.get(id);
     if (cbInfo === undefined) {
@@ -75,6 +73,8 @@ export class HistoryMenu
     } else {
       cbInfo.usage++;
     }
+
+    log.debug(`added '${cbInfo.display()}'`);
   }
 
   onRemoveItem(item: typeof MenuItem.MenuItem) {
