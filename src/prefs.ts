@@ -1,94 +1,116 @@
 'use strict';
 
+// @ts-ignore
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
 
-const MARGIN = 10;
+import * as log from 'log';
+import * as Settings from 'settings';
 
 
 const Gettext = imports.gettext;
 const _ = Gettext.domain('gnome-clipboard').gettext;
 
 export function init() {
-    // Gtk.init(null);
+    Gtk.init(null);
 }
 
 export function buildPrefsWidget() {
-
-    // Copy the same GSettings code from `extension.js`
     let settings = ExtensionUtils.getSettings(
         'org.gnome.shell.extensions.gnome-clipboard');
 
     let box = new Gtk.Box({
         orientation: Gtk.Orientation.VERTICAL,
-        margin_top: 3 * MARGIN,
-        margin_bottom: 3 * MARGIN,
-        margin_start: 3 * MARGIN,
-        margin_end: 3 * MARGIN,
-        spacing: 3 * MARGIN,
-        visible: true
-     });
-
-    let globalFrame = new Gtk.Frame({
-        label: _("Preferences"),
         margin: 18,
         visible: true
-     });
+    });
 
-     box.add(globalFrame);
+    let prefsFrame = new Gtk.Frame({
+        label: _("Preferences"),
+        visible: true
+    });
+    box.add(prefsFrame);
 
     // Create a parent widget that we'll return from this function
-    let prefsWidget = new Gtk.Grid({
+    let prefsGrid = new Gtk.Grid({
         margin: 18,
         column_spacing: 12,
         row_spacing: 12,
-        visible: true
+        visible: true,
+        row_homogeneous: false,
+        column_homogeneous: true,
+
     });
 
-    // Add a simple title and add it to the prefsWidget
-    let title = new Gtk.Label({
-        label: `<b>${Me.metadata.name} Preferences</b>`,
-        halign: Gtk.Align.START,
-        use_markup: true,
-        visible: true
-    });
-    prefsWidget.attach(title, 0, 0, 2, 1);
+    let row = 0
+    let addRowAndBindSetting = function (grid: any, widget: any, name: string, desc: string) {
 
-    // Create a label & switch for `show-indicator`
-    let toggleLabel = new Gtk.Label({
-        label: 'Show Extension Indicator:',
-        halign: Gtk.Align.START,
-        visible: true
-    });
-    prefsWidget.attach(toggleLabel, 0, 1, 1, 1);
+        let label = new Gtk.Label({
+            label: desc,
+            halign: Gtk.Align.START,
+            visible: true
+        });
+        widget.set_tooltip_text(desc);
 
-    let toggle = new Gtk.Switch({
-        active: settings.get_boolean('show-indicator'),
-        halign: Gtk.Align.END,
-        visible: true
-    });
-    prefsWidget.attach(toggle, 1, 1, 1, 1);
+        grid.attach(label, 0, row, 1, 1);
+        grid.attach(widget, 1, row, 1, 1);
 
-    // Bind the switch to the `show-indicator` key
-    settings.bind(
-        'show-indicator',
-        toggle,
-        'active',
-        Gio.SettingsBindFlags.DEFAULT
-    );
+        if (widget instanceof Gtk.Switch) {
+            widget.active = settings.get_boolean(name)
+            settings.bind(
+                name,
+                widget,
+                'active',
+                Gio.SettingsBindFlags.DEFAULT
+            );
+        } else if (widget instanceof Gtk.SpinButton) {
+            widget.value = settings.get_uint(name)
+            settings.bind(
+                name,
+                widget,
+                'value',
+                Gio.SettingsBindFlags.DEFAULT
+            );
+        } else {
+            log.error("Invalid prefs widget")
+        }
 
-    globalFrame.add(prefsWidget);
+        row++;
+    };
 
-    let globalFrame2 = new Gtk.Frame({
+
+    {
+        let widget = new Gtk.SpinButton({
+            halign: Gtk.Align.END,
+            visible: true
+        });
+        widget.set_range(0, 1000);
+        widget.set_increments(1, 1);
+        addRowAndBindSetting(prefsGrid, widget, Settings.HISTORY_SIZE, _("Maximum size of history:"));
+    }
+
+    {
+        let widget = new Gtk.Switch({
+            halign: Gtk.Align.END,
+            visible: true
+        });
+
+        addRowAndBindSetting(prefsGrid, widget, Settings.CLIPBOARD_TIMER, "Read clipboard by timer:");
+    }
+
+    prefsFrame.add(prefsGrid);
+
+    let prefsFrame2 = new Gtk.Frame({
         label: _("Preferences"),
         margin: 18,
         visible: true
-     });
+    });
 
-     box.add(globalFrame2);
+    box.add(prefsFrame2);
 
     return box;
 }

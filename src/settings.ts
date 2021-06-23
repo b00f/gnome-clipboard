@@ -13,14 +13,14 @@ interface Settings extends GObject.Object {
     bind(key: string, object: GObject.Object, property: string, flags: any): void
 }
 
-const HISTORY_SIZE = "history-size";
-const CLIPBOARD_TIMER = "clipboard-timer";
-const TIMER_INTERVAL = "timer-interval";
+export const HISTORY_SIZE = "history-size";
+export const CLIPBOARD_TIMER = "clipboard-timer";
+export const TIMER_INTERVAL = "timer-interval";
 
 export class ExtensionSettings {
     settings: Settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.gnome-clipboard');
 
-    cacheSize(): number {
+    historySize(): number {
         return this.settings.get_uint(HISTORY_SIZE);
     }
 

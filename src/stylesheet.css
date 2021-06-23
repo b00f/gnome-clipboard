@@ -28,3 +28,7 @@
 .gnome-clipboard .trash-item {
     width: auto;
 }
+
+.gnome-clipboard  .prefs-grid {
+    border: 1px solid red;
+}
