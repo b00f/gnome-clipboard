@@ -6,8 +6,14 @@ const Gtk = imports.gi.Gtk;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
+const MARGIN = 10;
+
+
+const Gettext = imports.gettext;
+const _ = Gettext.domain('gnome-clipboard').gettext;
 
 export function init() {
+    // Gtk.init(null);
 }
 
 export function buildPrefsWidget() {
@@ -15,6 +21,24 @@ export function buildPrefsWidget() {
     // Copy the same GSettings code from `extension.js`
     let settings = ExtensionUtils.getSettings(
         'org.gnome.shell.extensions.gnome-clipboard');
+
+    let box = new Gtk.Box({
+        orientation: Gtk.Orientation.VERTICAL,
+        margin_top: 3 * MARGIN,
+        margin_bottom: 3 * MARGIN,
+        margin_start: 3 * MARGIN,
+        margin_end: 3 * MARGIN,
+        spacing: 3 * MARGIN,
+        visible: true
+     });
+
+    let globalFrame = new Gtk.Frame({
+        label: _("Preferences"),
+        margin: 18,
+        visible: true
+     });
+
+     box.add(globalFrame);
 
     // Create a parent widget that we'll return from this function
     let prefsWidget = new Gtk.Grid({
@@ -42,7 +66,7 @@ export function buildPrefsWidget() {
     prefsWidget.attach(toggleLabel, 0, 1, 1, 1);
 
     let toggle = new Gtk.Switch({
-        active: settings.get_boolean ('show-indicator'),
+        active: settings.get_boolean('show-indicator'),
         halign: Gtk.Align.END,
         visible: true
     });
@@ -56,6 +80,15 @@ export function buildPrefsWidget() {
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    // Return our widget which will be added to the window
-    return prefsWidget;
+    globalFrame.add(prefsWidget);
+
+    let globalFrame2 = new Gtk.Frame({
+        label: _("Preferences"),
+        margin: 18,
+        visible: true
+     });
+
+     box.add(globalFrame2);
+
+    return box;
 }
