@@ -7,7 +7,12 @@
       <default>100</default>
       <summary>Maximum size of history</summary>
     </key>
-    
+
+    <key type="i" name="history-sort">
+      <default>0</default>
+      <summary>Sort history by</summary>
+    </key>
+
     <key type="b" name="clipboard-timer">
       <default>false</default>
       <summary>Read clipboard by timer</summary>

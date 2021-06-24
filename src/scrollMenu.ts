@@ -17,8 +17,9 @@ export class ScrollMenu
       clip_to_allocation: true,
     });
 
-    //MMMMM
-    // this.scroll_view.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+
+    // Scroll bar policy
+    this.scroll_view.set_policy(St.PolicyType.NEVER, St.PolicyType.AUTOMATIC);
     this.scroll_view_section = new PopupMenu.PopupMenuSection();
     this.scroll_view.add_actor(this.scroll_view_section.actor);
     this.actor.add_actor(this.scroll_view);

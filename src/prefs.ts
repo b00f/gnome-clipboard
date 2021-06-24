@@ -5,6 +5,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
+const GObject = imports.gi.GObject;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 
@@ -20,27 +21,22 @@ export function init() {
 }
 
 export function buildPrefsWidget() {
-    let settings = ExtensionUtils.getSettings(
-        'org.gnome.shell.extensions.gnome-clipboard');
+    let settings = ExtensionUtils.getSettings(Settings.SCHEMA_ID);
 
     let box = new Gtk.Box({
         orientation: Gtk.Orientation.VERTICAL,
         margin: 18,
-        visible: true
     });
 
     let prefsFrame = new Gtk.Frame({
         label: _("Preferences"),
-        visible: true
     });
     box.add(prefsFrame);
 
-    // Create a parent widget that we'll return from this function
     let prefsGrid = new Gtk.Grid({
         margin: 18,
         column_spacing: 12,
         row_spacing: 12,
-        visible: true,
         row_homogeneous: false,
         column_homogeneous: true,
 
@@ -52,14 +48,13 @@ export function buildPrefsWidget() {
         let label = new Gtk.Label({
             label: desc,
             halign: Gtk.Align.START,
-            visible: true
         });
         widget.set_tooltip_text(desc);
 
         grid.attach(label, 0, row, 1, 1);
         grid.attach(widget, 1, row, 1, 1);
 
-        if (widget instanceof Gtk.Switch) {
+        if (widget instanceof Gtk.Switch || widget instanceof Gtk.ComboBox) {
             widget.active = settings.get_boolean(name)
             settings.bind(
                 name,
@@ -82,13 +77,11 @@ export function buildPrefsWidget() {
         row++;
     };
 
-
     {
         let widget = new Gtk.SpinButton({
             halign: Gtk.Align.END,
-            visible: true
         });
-        widget.set_range(0, 1000);
+        widget.set_range(2, 1000);
         widget.set_increments(1, 1);
         addRowAndBindSetting(prefsGrid, widget, Settings.HISTORY_SIZE, _("Maximum size of history:"));
     }
@@ -96,10 +89,32 @@ export function buildPrefsWidget() {
     {
         let widget = new Gtk.Switch({
             halign: Gtk.Align.END,
-            visible: true
         });
 
         addRowAndBindSetting(prefsGrid, widget, Settings.CLIPBOARD_TIMER, "Read clipboard by timer:");
+    }
+
+    {
+        let sortStore = new Gtk.ListStore();
+        sortStore.set_column_types([GObject.TYPE_STRING]);
+        let sorting = [
+            _("Most usage"),
+            _("Copy time"),
+            _("Recent copied time"),
+        ];
+        for (let s of sorting) {
+            sortStore.set(sortStore.append(), [0], [s]);
+        }
+
+        let widget = new Gtk.ComboBox({
+            halign: Gtk.Align.END,
+            model: sortStore,
+        });
+        let renderer = new Gtk.CellRendererText();
+        widget.pack_start(renderer, true);
+        widget.add_attribute(renderer, "text", 0);
+
+        addRowAndBindSetting(prefsGrid, widget, Settings.HISTORY_SORT, "Sort history by:");
     }
 
     prefsFrame.add(prefsGrid);
@@ -107,10 +122,10 @@ export function buildPrefsWidget() {
     let prefsFrame2 = new Gtk.Frame({
         label: _("Preferences"),
         margin: 18,
-        visible: true
     });
 
     box.add(prefsFrame2);
+    box.show_all();
 
     return box;
 }

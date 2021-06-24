@@ -54,7 +54,9 @@ export class HistoryMenu
       items.push(item);
     });
 
-    // TODO: sort
+    items.sort(function (l: typeof MenuItem.MenuItem, r: typeof MenuItem.MenuItem) : number {
+      return r.cbInfo.usage - l.cbInfo.usage
+    });
 
     items.forEach((item, _) => {
       super.addMenuItem(item);
@@ -82,11 +84,11 @@ export class HistoryMenu
   }
 
   onPinItem(item: typeof MenuItem.MenuItem) {
-    item.clipboardData.pinned = true;
+    item.cbInfo.pinned = true;
   }
 
   onActivateItem(item: typeof MenuItem.MenuItem) {
-    this.updateClipboard(item.clipboardData.text);
+    this.updateClipboard(item.cbInfo.text);
   }
 
   loadHistory(history: any) {
