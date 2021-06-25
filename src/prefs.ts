@@ -87,20 +87,12 @@ export function buildPrefsWidget() {
     }
 
     {
-        let widget = new Gtk.Switch({
-            halign: Gtk.Align.END,
-        });
-
-        addRowAndBindSetting(prefsGrid, widget, Settings.CLIPBOARD_TIMER, "Read clipboard by timer:");
-    }
-
-    {
         let sortStore = new Gtk.ListStore();
         sortStore.set_column_types([GObject.TYPE_STRING]);
         let sorting = [
             _("Most usage"),
+            _("Resent usage"),
             _("Copy time"),
-            _("Recent copied time"),
         ];
         for (let s of sorting) {
             sortStore.set(sortStore.append(), [0], [s]);
@@ -115,6 +107,23 @@ export function buildPrefsWidget() {
         widget.add_attribute(renderer, "text", 0);
 
         addRowAndBindSetting(prefsGrid, widget, Settings.HISTORY_SORT, "Sort history by:");
+    }
+
+    {
+        let widget = new Gtk.Switch({
+            halign: Gtk.Align.END,
+        });
+
+        addRowAndBindSetting(prefsGrid, widget, Settings.CLIPBOARD_TIMER, "Read clipboard by timer:");
+    }
+
+    {
+        let widget = new Gtk.SpinButton({
+            halign: Gtk.Align.END,
+        });
+        widget.set_range(1, 1000);
+        widget.set_increments(1, 1);
+        addRowAndBindSetting(prefsGrid, widget, Settings.TIMER_INTERVAL, _("Timer interval (Second):"));
     }
 
     prefsFrame.add(prefsGrid);

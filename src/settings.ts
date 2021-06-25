@@ -20,11 +20,18 @@ export const HISTORY_SORT = "history-sort";
 export const CLIPBOARD_TIMER = "clipboard-timer";
 export const TIMER_INTERVAL = "timer-interval";
 
+export const HISTORY_SORT_MOST_USAGE = 0;
+export const HISTORY_SORT_RECENT_USAGE = 1;
+export const HISTORY_SORT_COPY_TIME = 2;
 export class ExtensionSettings {
     settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
 
     historySize(): number {
         return this.settings.get_uint(HISTORY_SIZE);
+    }
+
+    historySort(): number {
+        return this.settings.get_uint(HISTORY_SORT);
     }
 
     clipboardTimer(): boolean {

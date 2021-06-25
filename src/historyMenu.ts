@@ -2,6 +2,7 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 import * as ScrollMenu from 'scrollMenu';
+import * as Settings from 'settings';
 import * as MenuItem from 'menuItem';
 import * as utils from 'utils';
 import * as log from 'log';
@@ -12,11 +13,15 @@ export class HistoryMenu
   extends ScrollMenu.ScrollMenu {
   lookup: Map<number, MenuItem.ClipboardInfo> = new Map();
   selectedID: number;
+  settings: Settings.ExtensionSettings;
   updateClipboard: (text: string) => void;
 
-  constructor(updateClipboard: (text: string) => void) {
+  constructor(
+    settings: Settings.ExtensionSettings,
+    updateClipboard: (text: string) => void) {
     super()
 
+    this.settings = settings;
     this.updateClipboard = updateClipboard;
     this.selectedID = 0;
   }
@@ -51,12 +56,31 @@ export class HistoryMenu
       if (cbInfo.id() == this.selectedID) {
         item.setOrnament(PopupMenu.Ornament.DOT)
       }
+
       items.push(item);
     });
 
-    items.sort(function (l: typeof MenuItem.MenuItem, r: typeof MenuItem.MenuItem) : number {
-      return r.cbInfo.usage - l.cbInfo.usage
+    let historySort = this.settings.historySort();
+    items.sort(function (l: typeof MenuItem.MenuItem, r: typeof MenuItem.MenuItem): number {
+      switch (historySort) {
+
+        case Settings.HISTORY_SORT_RECENT_USAGE:
+          return r.cbInfo.used_at - l.cbInfo.used_at;
+
+        case Settings.HISTORY_SORT_COPY_TIME:
+          return r.cbInfo.copied_at - l.cbInfo.copied_at;
+
+        case Settings.HISTORY_SORT_MOST_USAGE:
+        default:
+          return r.cbInfo.usage - l.cbInfo.usage;
+      }
     });
+
+    let historySize = this.settings.historySize();
+    for( let i=historySize; i<items.length; ++i) {
+      let item = items.pop();
+      item.destroy();
+    }
 
     items.forEach((item, _) => {
       super.addMenuItem(item);
@@ -75,6 +99,7 @@ export class HistoryMenu
     } else {
       cbInfo.usage++;
     }
+    cbInfo.updateLastUsed();
 
     log.debug(`added '${cbInfo.display()}'`);
   }

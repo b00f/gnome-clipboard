@@ -65,13 +65,19 @@ var gnomeClipboardMenu = GObject.registerClass(
       let separator1 = new PopupMenu.PopupSeparatorMenuItem();
       this.menu.addMenuItem(separator1);
 
-      this.historyMenu = new HistoryMenu.HistoryMenu(this.updateClipboard.bind(this));
+      this.historyMenu = new HistoryMenu.HistoryMenu(
+        this.settings,
+        this.updateClipboard.bind(this)
+      );
       this.menu.addMenuItem(this.historyMenu);
 
       let separator2 = new PopupMenu.PopupSeparatorMenuItem();
       this.menu.addMenuItem(separator2);
 
       this.actionBar = new ActionBar.ActionBar();
+      this.actionBar.registerOpenSettings(function () {
+        ExtensionUtils.openPrefs();
+      })
       this.menu.addMenuItem(this.actionBar);
 
       // this.search_box.onTextChanged(this.onSearchItemChanged.bind(this));
@@ -119,7 +125,7 @@ var gnomeClipboardMenu = GObject.registerClass(
     }
 
     updateHistory() {
-      if (this.actionBar._privateMode()) return; // Private mode, do not.
+      if (this.actionBar.privateMode()) return; // Private mode, do not.
 
       let menu = this;
       // St.Clipboard definition:

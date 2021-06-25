@@ -32,11 +32,9 @@ export class Store {
       if (success && contents) {
         history = JSON.parse(imports.byteArray.toString(contents));
       }
-    } catch (e) {
-      log.error(`an exception occurred: ${e}`);
+    } catch (err) {
+      log.error(`an exception occurred: ${err}`);
     }
-
-    log.debug(`history: ${history}`);
 
     return history;
   }
@@ -47,8 +45,8 @@ export class Store {
     try {
       let json = JSON.stringify(history);
       GLib.file_set_contents(this.path, json);
-    } catch (e) {
-      log.error(`an exception occurred: ${e}`);
+    } catch (err) {
+      log.error(`an exception occurred: ${err}`);
     }
   }
 }

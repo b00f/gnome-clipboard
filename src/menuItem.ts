@@ -13,11 +13,15 @@ export class ClipboardInfo {
   text: string;
   usage: number;
   pinned: boolean;
+  copied_at: number;
+  used_at: number;
 
   constructor(text: string, usage: number, pinned: boolean) {
     this.text = text;
     this.usage = usage;
     this.pinned = pinned;
+    this.copied_at = Date.now();
+    this.used_at = Date.now();
   }
 
   id(): number {
@@ -26,6 +30,10 @@ export class ClipboardInfo {
 
   display(): string {
     return utils.truncate(this.text, 32);
+  }
+
+  updateLastUsed() {
+    this.used_at = Date.now();
   }
 }
 

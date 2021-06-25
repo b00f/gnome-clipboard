@@ -3,12 +3,12 @@
   <schema id="org.gnome.shell.extensions.gnome-clipboard" path="/org/gnome/shell/extensions/gnome-clipboard/">
     <!-- See also: https://developer.gnome.org/glib/stable/gvariant-format-strings.html -->
 
-    <key type="i" name="history-size">
+    <key type="u" name="history-size">
       <default>100</default>
       <summary>Maximum size of history</summary>
     </key>
 
-    <key type="i" name="history-sort">
+    <key type="u" name="history-sort">
       <default>0</default>
       <summary>Sort history by</summary>
     </key>
@@ -19,8 +19,8 @@
     </key>
 
     <key type="i" name="timer-interval">
-      <default>1000</default>
-      <summary>Timer interval (milli second)</summary>
+      <default>1</default>
+      <summary>Timer interval (Second)</summary>
     </key>
 
     <key type="u" name="log-level">

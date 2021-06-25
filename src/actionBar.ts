@@ -70,25 +70,25 @@ export var ActionBar = GObject.registerClass(
       this.actor.add(this.actionsBox);
     }
 
-    _registerPrivateModeSwitch(callback: (state: any) => void) {
+    registerPrivateModeSwitch(callback: (state: any) => void) {
       this.privateModeBtn.connect('toggled', (obj: any) => {
         callback(obj.state);
       });
     }
 
-    _registerRemoveAll(callback: () => void) {
+    registerRemoveAll(callback: () => void) {
       this.clearBtn.connect('activate', (_obj: any) => {
         callback();
       });
     }
 
-    _registerOpenSettings(callback: () => void) {
+    registerOpenSettings(callback: () => void) {
       this.settingsBtn.connect('activate', (_obj: any) => {
         callback();
       });
     }
 
-    _privateMode() {
+    privateMode() {
       return this.privateModeBtn.state;
     }
   }
