@@ -10,8 +10,7 @@ export class ScrollMenu
   constructor() {
     super();
 
-    // scroll_view
-    this.scroll_view = new St.ScrollView({
+    this.scrollView = new St.ScrollView({
       overlay_scrollbars: true,
       style_class: "vfade scroll-view",
       clip_to_allocation: true,
@@ -19,22 +18,26 @@ export class ScrollMenu
 
 
     // Scroll bar policy
-    this.scroll_view.set_policy(St.PolicyType.NEVER, St.PolicyType.AUTOMATIC);
-    this.scroll_view_section = new PopupMenu.PopupMenuSection();
-    this.scroll_view.add_actor(this.scroll_view_section.actor);
-    this.actor.add_actor(this.scroll_view);
+    this.scrollView.set_policy(St.PolicyType.NEVER, St.PolicyType.AUTOMATIC);
+    this.scrollViewSection = new PopupMenu.PopupMenuSection();
+    this.scrollView.add_actor(this.scrollViewSection.actor);
+    this.actor.add_actor(this.scrollView);
   }
 
   addMenuItem(item: any) {
-    this.scroll_view_section.addMenuItem(item);
+    this.scrollViewSection.addMenuItem(item);
   }
 
   removeAll() {
-    this.scroll_view_section.removeAll();
+    this.scrollViewSection.removeAll();
+  }
+
+  allItems() {
+    return this.scrollViewSection._getMenuItems();
   }
 
   clearOrnament() {
-    let children = this.scroll_view_section._getMenuItems();
+    let children = this.scrollViewSection._getMenuItems();
     for (let i = 0; i < children.length; i++) {
       let item = children[i];
       item.setOrnament(PopupMenu.Ornament.NONE);

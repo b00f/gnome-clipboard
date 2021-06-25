@@ -75,12 +75,13 @@ var gnomeClipboardMenu = GObject.registerClass(
       this.menu.addMenuItem(separator2);
 
       this.actionBar = new ActionBar.ActionBar();
+      this.menu.addMenuItem(this.actionBar);
+
       this.actionBar.registerOpenSettings(function () {
         ExtensionUtils.openPrefs();
       })
-      this.menu.addMenuItem(this.actionBar);
 
-      // this.search_box.onTextChanged(this.onSearchItemChanged.bind(this));
+      this.searchBox.onTextChanged(this.onSearchItemChanged.bind(this));
     }
 
     updateClipboard(text: string) {
@@ -90,22 +91,22 @@ var gnomeClipboardMenu = GObject.registerClass(
       this.toggle();
     }
 
-    // onSearchItemChanged() {
-    //   let query = this.search_box.getText().toLowerCase();
+    onSearchItemChanged() {
+      let query = this.searchBox.getText().toLowerCase();
 
-    //   if (query === '') {
-    //     this.trash_menu.getAllItems().forEach(function (item) {
-    //       item.actor.visible = true;
-    //     });
-    //   }
-    //   else {
-    //     this.trash_menu.getAllItems().forEach(function (item) {
-    //       let text = item.file_name.toLowerCase();
-    //       let matched = text.indexOf(query) >= 0;
-    //       item.actor.visible = matched
-    //     });
-    //   }
-    // }
+      if (query === '') {
+        this.historyMenu.allItems().forEach(function (item: any) {
+          item.actor.visible = true;
+        });
+      }
+      else {
+        this.historyMenu.allItems().forEach(function (item: any) {
+          let text = item.cbInfo.text.toLowerCase();
+          let matched = text.indexOf(query) >= 0;
+          item.actor.visible = matched
+        });
+      }
+    }
 
     setupListener() {
       const display = Shell.Global.get().get_display();

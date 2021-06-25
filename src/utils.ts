@@ -19,7 +19,7 @@ export function log_methods(obj) {
     }
   }
 
-  log(result);
+  log.info(result.toString());
 }
 
 // https://stackoverflow.com/questions/9382167/serializing-object-that-contains-cyclic-object-value
@@ -35,7 +35,7 @@ export function log_object(obj) {
     }
     return val;
   });
-  log(json);
+  log.info(json);
 }
 
 // Javascript implementation of Java’s String.hashCode() method
@@ -51,6 +51,7 @@ export function hashCode(text: string): number {
   return hash;
 }
 
+// @ts-ignore
 export function truncate(text: string, length: number): string {
   text = text.trim();
   text = text.replace(/\s+/g, ' ');
