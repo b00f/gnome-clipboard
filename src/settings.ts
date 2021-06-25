@@ -26,6 +26,11 @@ export const HISTORY_SORT_COPY_TIME = 2;
 export class ExtensionSettings {
     settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
 
+    onChanged(callback: ()=>void) {
+        this.settings.connect('changed',
+            callback); //get notified on every schema change
+    }
+
     historySize(): number {
         return this.settings.get_uint(HISTORY_SIZE);
     }

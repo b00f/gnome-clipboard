@@ -43,6 +43,9 @@ var gnomeClipboardMenu = GObject.registerClass(
 
       this.historyMenu.loadHistory(this.store.load());
 
+      this.settings.onChanged(this.onSettingsChanged.bind(this));
+
+
       // Clear search when re-open the menu and set focus on search box
       //   this.menu.connect('open-state-changed', function (self, open) {
       //     if (open) {
@@ -89,6 +92,12 @@ var gnomeClipboardMenu = GObject.registerClass(
 
       this.clipboard.set_text(St.ClipboardType.CLIPBOARD, text);
       this.toggle();
+    }
+
+    onSettingsChanged() {
+      log.info("settings changed");
+
+      this.historyMenu.refresh();
     }
 
     onSearchItemChanged() {

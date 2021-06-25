@@ -26,6 +26,10 @@ export class HistoryMenu
     this.selectedID = 0;
   }
 
+  refresh() {
+    this._rebuildMenu()
+  }
+
   addClipboard(text: string) {
     if (text === null || text.length === 0) {
       return;
