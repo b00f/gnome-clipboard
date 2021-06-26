@@ -3,11 +3,8 @@ const PopupMenu = imports.ui.popupMenu
 
 export var SearchBox = GObject.registerClass(
   class SearchBox extends PopupMenu.PopupBaseMenuItem {
-    constructor() {
-      super();
-    }
 
-    _init() {
+    protected _init() {
       super._init({
         reactive: false,
         can_focus: true,

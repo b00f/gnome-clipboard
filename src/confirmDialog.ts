@@ -7,7 +7,7 @@ const Clutter = imports.gi.Clutter;
 
 
 
-function openConfirmDialog(
+export function openConfirmDialog(
   title: string,
   message: string,
   sub_message: string,
@@ -20,7 +20,7 @@ function openConfirmDialog(
 export const ConfirmDialog = GObject.registerClass(
   class ConfirmDialog extends ModalDialog.ModalDialog {
 
-    _init(
+    protected _init(
       title: string,
       desc: string,
       ok_label: string,

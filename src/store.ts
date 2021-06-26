@@ -2,7 +2,6 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 import * as log from 'log';
-import * as utils from 'utils';
 
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;

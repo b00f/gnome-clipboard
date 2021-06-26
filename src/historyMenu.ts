@@ -45,7 +45,7 @@ export class HistoryMenu
     this._rebuildMenu();
   }
 
-  _rebuildMenu() {
+  private _rebuildMenu() {
     super.removeAll();
 
     let items = new Array();
@@ -91,7 +91,7 @@ export class HistoryMenu
     });
   }
 
-  _addToHistory(text: string, usage: number, pinned: boolean) {
+  private _addToHistory(text: string, usage: number, pinned: boolean) {
     let id = utils.hashCode(text);
     let cbInfo = this.lookup.get(id);
     if (cbInfo === undefined) {

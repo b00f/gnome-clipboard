@@ -4,7 +4,7 @@ const GObject = imports.gi.GObject;
 
 export var ActionBar = GObject.registerClass(
   class ActionBar extends PopupMenu.PopupBaseMenuItem {
-    _init() {
+    protected _init() {
       super._init({
         activate: false,
         hover: false,

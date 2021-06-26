@@ -39,7 +39,7 @@ export class ClipboardInfo {
 
 export var MenuItem = GObject.registerClass(
   class MenuItem extends PopupMenu.PopupBaseMenuItem {
-    _init(
+    protected _init(
       cbInfo: ClipboardInfo,
       onActivate: (item: MenuItem) => void,
       onRemove: (item: MenuItem) => void,

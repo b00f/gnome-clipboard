@@ -21,7 +21,7 @@ var gnomeClipboardMenu = GObject.registerClass(
     _clipboardTimerID = 0;
     _selectionOwnerChangedID = 0;
 
-    _init() {
+    protected _init() {
       this.clipboard = St.Clipboard.get_default();
       this.settings = new Settings.ExtensionSettings();
 
