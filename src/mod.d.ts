@@ -152,6 +152,7 @@ declare namespace Clutter {
         set_position(x: number, y: number): void;
         set_size(width: number, height: number): void;
         show(): void;
+        set_key_focus(child: Actor): void;
     }
 
     interface ActorBox {
