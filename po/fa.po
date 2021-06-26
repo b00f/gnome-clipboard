@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-clipboard\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-12 16:28+0800\n"
+"POT-Creation-Date: 2021-06-26 20:20+0800\n"
 "PO-Revision-Date: 2021-06-12 16:33+0800\n"
 "Last-Translator: Mostafa <mostafa.sedaghat@gmail.com>\n"
 "Language-Team: Persian\n"
@@ -16,8 +16,35 @@ msgstr ""
 "Content-Type: text/plain; charset=ASCII\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Clipboard"
+msgid "Cancel"
+msgstr "لغو"
+
+msgid "Copy time"
+msgstr "زمان کپی"
+
+msgid "Gnome Clipboard"
+msgstr "گنوم کلیپبورد"
+
+msgid "Maximum size of history:"
+msgstr ""
+
+msgid "Most usage"
+msgstr ""
+
+msgid "OK"
+msgstr "تایید"
+
+msgid "Preferences"
+msgstr "ترجیحات"
+
+msgid "Private mode"
+msgstr ""
+
+msgid "Resent usage"
+msgstr ""
+
+msgid "Timer interval (Millisecond):"
 msgstr ""
 
 msgid "Type here to search..."
-msgstr ""
+msgstr "برای جستجو اینجا بنویسید ..."
