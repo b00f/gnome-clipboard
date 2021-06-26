@@ -102,19 +102,7 @@ var gnomeClipboardMenu = GObject.registerClass(
 
     onSearchItemChanged() {
       let query = this.searchBox.getText().toLowerCase();
-
-      if (query === '') {
-        this.historyMenu.allItems().forEach(function (item: any) {
-          item.actor.visible = true;
-        });
-      }
-      else {
-        this.historyMenu.allItems().forEach(function (item: any) {
-          let text = item.cbInfo.text.toLowerCase();
-          let matched = text.indexOf(query) >= 0;
-          item.actor.visible = matched
-        });
-      }
+      this.historyMenu.filterItems(query);
     }
 
     setupListener() {

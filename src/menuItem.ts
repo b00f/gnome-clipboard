@@ -98,5 +98,10 @@ export var MenuItem = GObject.registerClass(
         }
       );
     }
+
+    text(): string {
+      return this.cbInfo.text;
+    }
+
   }
 );

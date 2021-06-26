@@ -1,3 +1,8 @@
+// @ts-ignore
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+
+import * as log from 'log';
+
 const { St } = imports.gi;
 const PopupMenu = imports.ui.popupMenu;
 
@@ -24,16 +29,30 @@ export class ScrollMenu
     this.actor.add_actor(this.scrollView);
   }
 
+  filterItems(query: string) {
+    log.debug(`filtering ${query}`);
+
+    let items = this.scrollViewSection._getMenuItems();
+    if (query === '') {
+      items.forEach(function (item: any) {
+        item.actor.visible = true;
+      });
+    }
+    else {
+      items.forEach(function (item: any) {
+        let text = item.text().toLowerCase();
+        let matched = text.indexOf(query) >= 0;
+        item.actor.visible = matched
+      });
+    }
+  }
+
   addMenuItem(item: any) {
     this.scrollViewSection.addMenuItem(item);
   }
 
   removeAll() {
     this.scrollViewSection.removeAll();
-  }
-
-  allItems() {
-    return this.scrollViewSection._getMenuItems();
   }
 
   clearOrnament() {
