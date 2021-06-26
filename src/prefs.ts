@@ -121,9 +121,9 @@ export function buildPrefsWidget() {
         let widget = new Gtk.SpinButton({
             halign: Gtk.Align.END,
         });
-        widget.set_range(1, 1000);
-        widget.set_increments(1, 1);
-        addRowAndBindSetting(prefsGrid, widget, Settings.TIMER_INTERVAL, _("Timer interval (Second):"));
+        widget.set_range(100, 100000);
+        widget.set_increments(100, 100);
+        addRowAndBindSetting(prefsGrid, widget, Settings.TIMER_INTERVAL, _("Timer interval (Millisecond):"));
     }
 
     prefsFrame.add(prefsGrid);

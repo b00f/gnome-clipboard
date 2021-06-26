@@ -26,7 +26,7 @@ export const HISTORY_SORT_COPY_TIME = 2;
 export class ExtensionSettings {
     settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
 
-    onChanged(callback: ()=>void) {
+    onChanged(callback: () => void) {
         this.settings.connect('changed',
             callback); //get notified on every schema change
     }
@@ -43,7 +43,7 @@ export class ExtensionSettings {
         return this.settings.get_boolean(CLIPBOARD_TIMER);
     }
 
-    timerInterval(): number {
+    clipboardTimerIntervalInMillisecond(): number {
         return this.settings.get_uint(TIMER_INTERVAL);
     }
 }

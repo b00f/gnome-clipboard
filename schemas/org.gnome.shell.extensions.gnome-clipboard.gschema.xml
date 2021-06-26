@@ -18,9 +18,9 @@
       <summary>Read clipboard by timer</summary>
     </key>
 
-    <key type="i" name="timer-interval">
-      <default>1</default>
-      <summary>Timer interval (Second)</summary>
+    <key type="u" name="timer-interval">
+      <default>1000</default>
+      <summary>Timer interval (Millisecond)</summary>
     </key>
 
     <key type="u" name="log-level">

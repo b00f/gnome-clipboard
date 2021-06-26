@@ -6,10 +6,10 @@ import * as Settings from 'settings';
 import * as HistoryMenu from 'historyMenu';
 import * as SearchBox from 'searchBox';
 import * as ActionBar from 'actionBar';
-import * as utils from 'utils';
 import * as log from 'log';
 
 const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
 const { St, GObject, Meta, Shell, GLib } = imports.gi;
@@ -17,6 +17,9 @@ const ExtensionUtils = imports.misc.extensionUtils;
 
 var gnomeClipboardMenu = GObject.registerClass(
   class gnomeClipboardMenu extends PanelMenu.Button {
+
+    _clipboardTimerID = 0;
+    _selectionOwnerChangedID = 0;
 
     _init() {
       this.clipboard = St.Clipboard.get_default();
@@ -34,12 +37,7 @@ var gnomeClipboardMenu = GObject.registerClass(
       this.add_actor(this.clipboardIcon);
 
       this.setupMenu();
-
-      if (this.settings.clipboardTimer()) {
-        this.setupTimer();
-      } else {
-        this.setupListener();
-      }
+      this.setupListener();
 
       this.historyMenu.loadHistory(this.store.load());
 
@@ -97,6 +95,7 @@ var gnomeClipboardMenu = GObject.registerClass(
     onSettingsChanged() {
       log.info("settings changed");
 
+      this.setupListener();
       this.historyMenu.refresh();
     }
 
@@ -106,21 +105,47 @@ var gnomeClipboardMenu = GObject.registerClass(
     }
 
     setupListener() {
-      const display = Shell.Global.get().get_display();
-      const selection = display.get_selection();
-      if (selection) {
+      let selection = null;
+      try {
+        selection = Shell.Global.get().get_display().get_selection();
+      } catch (err) {
+        log.error(`unable to get selection: ${err}`);
+      }
 
-        this._selectionOwnerChangedId = selection.connect('owner-changed', (_selection: any, selectionType: any, _selectionSource: any) => {
+      // Stop and remove previous timer, if exists
+      if (this._clipboardTimerID) {
+        Mainloop.source_remove(this._clipboardTimerID);
+        this._clipboardTimerID = 0;
+      }
+
+      if (this._selectionOwnerChangedID) {
+        selection.disconnect(this._selectionOwnerChangedID);
+        this._selectionOwnerChangedID = 0;
+      }
+
+      if (this.settings.clipboardTimer()) {
+        let interval = this.settings.clipboardTimerIntervalInMillisecond();
+        log.info(`set timer every ${interval} ms`);
+
+        this._clipboardTimerID = Mainloop.timeout_add(interval, () => {
+          this.updateHistory();
+
+          // invoke the timer again
+          return true;
+        });
+
+        log.debug(`_clipboardTimerID: ${this._clipboardTimerID}`);
+
+      } else {
+        this._selectionOwnerChangedID = selection.connect('owner-changed', (_selection: any, selectionType: any, _selectionSource: any) => {
           if (selectionType === Meta.SelectionType.SELECTION_CLIPBOARD) {
             this.updateHistory();
           }
         });
+        log.debug(`_selectionOwnerChangedID: ${this._selectionOwnerChangedID}`);
       }
     }
 
-    setupTimer() {
-
-    }
 
     updateHistory() {
       if (this.actionBar.privateMode()) return; // Private mode, do not.
