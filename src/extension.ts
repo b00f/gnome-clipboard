@@ -43,18 +43,19 @@ var gnomeClipboardMenu = GObject.registerClass(
 
       this.settings.onChanged(this.onSettingsChanged.bind(this));
 
-
       // Clear search when re-open the menu and set focus on search box
-      //   this.menu.connect('open-state-changed', function (self, open) {
-      //     if (open) {
-      //       let that = this;
-      //       let t = Mainloop.timeout_add(50, function () {
-      //         that.search_box.setText('');
-      //         global.stage.set_key_focus(that.search_box.search_entry);
-      //         Mainloop.source_remove(t);
-      //       });
-      //     }
-      //   }.bind(this));
+      this.historyMenu.connect('open-state-changed', (_self: any, open: boolean) => {
+        if (open) {
+          let t = Mainloop.timeout_add(50, () => {
+            this.searchBox.setText('');
+            global.stage.set_key_focus(this.searchBox.searchEntry);
+
+            // Don't invoke timer again
+            Mainloop.source_remove(t);
+            return false
+          });
+        }
+      });
     }
 
     setupMenu() {
