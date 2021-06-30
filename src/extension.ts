@@ -45,16 +45,21 @@ var gnomeClipboardMenu = GObject.registerClass(
 
       // Clear search when re-open the menu and set focus on search box
       this.historyMenu.connect('open-state-changed', (_self: any, open: boolean) => {
+        log.debug("open-state-changed event");
         if (open) {
           let t = Mainloop.timeout_add(50, () => {
             this.searchBox.setText('');
-            global.stage.set_key_focus(this.searchBox.searchEntry);
 
             // Don't invoke timer again
             Mainloop.source_remove(t);
             return false
           });
         }
+      });
+
+      global.stage.connect('key-press-event', (_self: any, _event: any, _data: any) => {
+        log.debug("key-press event");
+        global.stage.set_key_focus(this.searchBox.searchEntry);
       });
     }
 
@@ -98,6 +103,7 @@ var gnomeClipboardMenu = GObject.registerClass(
 
       this.setupListener();
       this.historyMenu.refresh();
+      this.saveHistory();
     }
 
     onSearchItemChanged() {
@@ -154,15 +160,20 @@ var gnomeClipboardMenu = GObject.registerClass(
       let menu = this;
       // St.Clipboard definition:
       // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/master/src/st/st-clipboard.h
-      this.clipboard.get_text(St.ClipboardType.CLIPBOARD, function (_clipboard: any, text: string) {
+      this.clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
         log.debug(`clipboard content: ${text}`);
 
-        menu.historyMenu.addClipboard(text);
+        if (menu.historyMenu.addClipboard(text)) {
+          this.saveHistory();
+        }
       });
     }
 
-    destroy() {
+    private saveHistory() {
       this.store.save(this.historyMenu.getHistory(false));
+    }
+
+    destroy() {
     }
 
     toggle() {
