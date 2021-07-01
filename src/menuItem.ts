@@ -16,12 +16,12 @@ export class ClipboardInfo {
   copied_at: number;
   used_at: number;
 
-  constructor(text: string, usage: number, pinned: boolean) {
+  constructor(text: string, usage: number, pinned: boolean, copied_at: number, used_at: number) {
     this.text = text;
     this.usage = usage;
     this.pinned = pinned;
-    this.copied_at = Date.now();
-    this.used_at = Date.now();
+    this.copied_at = copied_at;
+    this.used_at = used_at;
   }
 
   id(): number {
@@ -44,6 +44,7 @@ export var MenuItem = GObject.registerClass(
       onActivate: (item: MenuItem) => void,
       onRemove: (item: MenuItem) => void,
       onPin: (item: MenuItem) => void) {
+
       super._init()
 
       this.cbInfo = cbInfo;
@@ -56,12 +57,30 @@ export var MenuItem = GObject.registerClass(
 
       // pin button
       let pinIcon = new St.Icon({
-        icon_name: "view-pin-symbolic",
-        style_class: 'popup-menu-icon'
+        icon_name: "",
+        layout_manager: new Clutter.BinLayout(),
+        reactive: true,
+        track_hover: true,
+        style_class: 'popup-menu-icon pin-icon'
       });
+
+      pinIcon.connect("enter-event", (self: any) => {
+        self.icon_name = "view-pin-symbolic";
+      });
+
+      pinIcon.connect("leave-event", (self: any) => {
+        if (this.cbInfo.pinned) {
+          self.icon_name = "view-pin-symbolic";
+        } else {
+          self.icon_name = "";
+        }
+      });
+
 
       let pinBtn = new St.Button({
         style_class: 'action-btn',
+        reactive: true,
+        track_hover: true,
         child: pinIcon
       });
 
