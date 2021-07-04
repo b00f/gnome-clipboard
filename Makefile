@@ -19,6 +19,7 @@ depcheck:
 
 pack: compile
 	@gnome-extensions pack --force --gettext-domain=$(EXT_NAME) dist \
+		--extra-source=clipboardPanel.js \
 		--extra-source=prefs.js \
 		--extra-source=scrollMenu.js \
 		--extra-source=historyMenu.js \
