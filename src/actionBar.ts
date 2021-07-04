@@ -11,12 +11,12 @@ export var ActionBar = GObject.registerClass(
         style_class: 'action-bar',
       })
 
-      this.actionsBox = new St.BoxLayout({
+      let actionsBox = new St.BoxLayout({
         vertical: false,
       });
 
-      this.actionsBox.set_x_expand(true);
-      this.actionsBox.set_y_expand(true);
+      actionsBox.set_x_expand(true);
+      actionsBox.set_y_expand(true);
 
       // TODO:: Add tooltip
       // Private mode switch
@@ -24,12 +24,12 @@ export var ActionBar = GObject.registerClass(
         _("Private mode"), false, {
         reactive: true, hover: true,
       });
-      this.actionsBox.add(this.privateModeBtn);
+      actionsBox.add(this.privateModeBtn);
       // Add a spacer
       this.spacer = new PopupMenu.PopupBaseMenuItem();
       this.spacer.set_x_expand(true);
       this.spacer.set_y_expand(true);
-      this.actionsBox.add(this.spacer);
+      actionsBox.add(this.spacer);
 
       // Add 'Clear' button which removes all items from cache
       this.clearBtn = new PopupMenu.PopupBaseMenuItem({
@@ -47,7 +47,7 @@ export var ActionBar = GObject.registerClass(
       this.clearBtn.set_x_expand(false);
       this.clearBtn.set_y_expand(false);
       this.clearBtn._ornamentLabel.visible = false;
-      this.actionsBox.add(this.clearBtn);
+      actionsBox.add(this.clearBtn);
 
       // TODO:: Add tooltip
       // Add 'Settings' menu item to open settings
@@ -65,9 +65,9 @@ export var ActionBar = GObject.registerClass(
       this.settingsBtn.set_x_expand(false);
       this.settingsBtn.set_y_expand(false);
       this.settingsBtn._ornamentLabel.visible = false;
-      this.actionsBox.add(this.settingsBtn);
+      actionsBox.add(this.settingsBtn);
 
-      this.actor.add(this.actionsBox);
+      this.actor.add(actionsBox);
     }
 
     registerPrivateModeSwitch(callback: (state: any) => void) {

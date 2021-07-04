@@ -29,6 +29,6 @@
     width: auto;
 }
 
-.gnome-clipboard  .prefs-grid {
-    border: 1px solid red;
+.gnome-clipboard .pin-icon {
+    width: 20px;
 }

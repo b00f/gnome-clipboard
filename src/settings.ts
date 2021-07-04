@@ -24,26 +24,26 @@ export const HISTORY_SORT_MOST_USAGE = 0;
 export const HISTORY_SORT_RECENT_USAGE = 1;
 export const HISTORY_SORT_COPY_TIME = 2;
 export class ExtensionSettings {
-    settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
+    private _settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
 
     onChanged(callback: () => void) {
-        this.settings.connect('changed',
+        this._settings.connect('changed',
             callback); //get notified on every schema change
     }
 
     historySize(): number {
-        return this.settings.get_uint(HISTORY_SIZE);
+        return this._settings.get_uint(HISTORY_SIZE);
     }
 
     historySort(): number {
-        return this.settings.get_uint(HISTORY_SORT);
+        return this._settings.get_uint(HISTORY_SORT);
     }
 
     clipboardTimer(): boolean {
-        return this.settings.get_boolean(CLIPBOARD_TIMER);
+        return this._settings.get_boolean(CLIPBOARD_TIMER);
     }
 
     clipboardTimerIntervalInMillisecond(): number {
-        return this.settings.get_uint(TIMER_INTERVAL);
+        return this._settings.get_uint(TIMER_INTERVAL);
     }
 }

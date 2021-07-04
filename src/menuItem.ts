@@ -58,11 +58,16 @@ export var MenuItem = GObject.registerClass(
       // pin button
       let pinIcon = new St.Icon({
         icon_name: "",
-        layout_manager: new Clutter.BinLayout(),
         reactive: true,
         track_hover: true,
-        style_class: 'popup-menu-icon pin-icon'
+        style_class: "popup-menu-icon pin-icon",
       });
+
+      if (this.cbInfo.pinned) {
+        pinIcon.icon_name = "view-pin-symbolic";
+      } else {
+        pinIcon.icon_name = "";
+      }
 
       pinIcon.connect("enter-event", (self: any) => {
         self.icon_name = "view-pin-symbolic";

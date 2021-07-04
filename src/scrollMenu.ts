@@ -17,7 +17,7 @@ export class ScrollMenu
 
     this.scrollView = new St.ScrollView({
       overlay_scrollbars: true,
-      style_class: "vfade scroll-view",
+      style_class: "scroll-view",
       clip_to_allocation: true,
     });
 
@@ -53,13 +53,5 @@ export class ScrollMenu
 
   removeAll() {
     this.scrollViewSection.removeAll();
-  }
-
-  clearOrnament() {
-    let children = this.scrollViewSection._getMenuItems();
-    for (let i = 0; i < children.length; i++) {
-      let item = children[i];
-      item.setOrnament(PopupMenu.Ornament.NONE);
-    }
   }
 };

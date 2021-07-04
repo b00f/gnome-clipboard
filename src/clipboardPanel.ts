@@ -24,6 +24,7 @@ export const ClipboardPanel = GObject.registerClass(
     private _keyPressEventID = 0;
 
     protected _init() {
+      this._clipboard = St.Clipboard.get_default();
       this._settings = new Settings.ExtensionSettings();
 
       let path = GLib.get_user_cache_dir() + '/' + Me.uuid;
@@ -97,8 +98,7 @@ export const ClipboardPanel = GObject.registerClass(
     private _updateClipboard(text: string) {
       log.debug(`update clipboard: ${text}`);
 
-      let clipboard = St.Clipboard.get_default();
-      clipboard.set_text(St.ClipboardType.CLIPBOARD, text);
+      this._clipboard.set_text(St.ClipboardType.CLIPBOARD, text);
 
       this._toggle();
     }
@@ -157,7 +157,7 @@ export const ClipboardPanel = GObject.registerClass(
       this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
         log.debug(`clipboard content: ${text}`);
 
-        if (menu.historyMenu.addClipboard(text)) {
+        if (menu._historyMenu.addClipboard(text)) {
           this._saveHistory();
         }
       });
@@ -196,7 +196,7 @@ export const ClipboardPanel = GObject.registerClass(
       }
 
       if (this._keyPressEventID) {
-        this._historyMenu.disconnect(this._keyPressEventID);
+        this._historyMenu.scrollView.disconnect(this._keyPressEventID);
         this._keyPressEventID = 0;
       }
 

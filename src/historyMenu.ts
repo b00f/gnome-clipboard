@@ -11,63 +11,72 @@ const PopupMenu = imports.ui.popupMenu;
 
 export class HistoryMenu
   extends ScrollMenu.ScrollMenu {
-  lookup: Map<number, MenuItem.ClipboardInfo> = new Map();
-  selectedID: number;
-  settings: Settings.ExtensionSettings;
-  updateClipboard: (text: string) => void;
+  private _lookup: Map<number, MenuItem.ClipboardInfo> = new Map();
+  private _selectedID: number;
+  private _settings: Settings.ExtensionSettings;
+  private _updateClipboard: (text: string) => void;
 
   constructor(
     settings: Settings.ExtensionSettings,
     updateClipboard: (text: string) => void) {
     super()
 
-    this.settings = settings;
-    this.updateClipboard = updateClipboard;
-    this.selectedID = 0;
+    this._settings = settings;
+    this._updateClipboard = updateClipboard;
+    this._selectedID = 0;
   }
 
-  refresh() {
+  public refresh() {
     this._rebuildMenu()
   }
 
-  addClipboard(text: string) {
+  public addClipboard(text: string): boolean {
     if (text === null || text.length === 0) {
-      return;
+      return false;
     }
 
     let id = utils.hashCode(text);
-    if (id == this.selectedID) {
-      return
+    if (id == this._selectedID) {
+      return false;
     }
 
-    this.selectedID = id;
-    this._addToHistory(text, 1, false);
+    this._selectedID = id;
+    this._addToHistory(text);
     this._rebuildMenu();
+
+    return true;
   }
 
   private _rebuildMenu() {
     super.removeAll();
 
     let items = new Array();
-    this.lookup.forEach((cbInfo, _) => {
+    this._lookup.forEach((cbInfo, _) => {
       let item = new MenuItem.MenuItem(
         cbInfo,
-        this.onActivateItem.bind(this),
-        this.onRemoveItem.bind(this),
-        this.onPinItem.bind(this)
+        this._onActivateItem.bind(this),
+        this._onRemoveItem.bind(this),
+        this._onPinItem.bind(this)
       );
 
-      if (cbInfo.id() == this.selectedID) {
-        item.setOrnament(PopupMenu.Ornament.DOT)
+      if (cbInfo.id() == this._selectedID) {
+        item.setOrnament(PopupMenu.Ornament.CHECK)
       }
 
       items.push(item);
     });
 
-    let historySort = this.settings.historySort();
+    let historySort = this._settings.historySort();
     items.sort(function (l: typeof MenuItem.MenuItem, r: typeof MenuItem.MenuItem): number {
-      switch (historySort) {
+      if (r.cbInfo.pinned && !l.cbInfo.pinned ) {
+        return 1;
+      }
 
+      if (!r.cbInfo.pinned && l.cbInfo.pinned ) {
+        return -1;
+      }
+
+      switch (historySort) {
         case Settings.HISTORY_SORT_RECENT_USAGE:
           return r.cbInfo.used_at - l.cbInfo.used_at;
 
@@ -76,13 +85,17 @@ export class HistoryMenu
 
         case Settings.HISTORY_SORT_MOST_USAGE:
         default:
+          if (r.cbInfo.usage = l.cbInfo.usage) {
+            return r.cbInfo.copied_at - l.cbInfo.copied_at;
+          }
           return r.cbInfo.usage - l.cbInfo.usage;
       }
     });
 
-    let historySize = this.settings.historySize();
-    for( let i=historySize; i<items.length; ++i) {
+    let historySize = this._settings.historySize();
+    for (let i = historySize; i < items.length; ++i) {
       let item = items.pop();
+      this._lookup.delete(item.cbInfo.id());
       item.destroy();
     }
 
@@ -91,15 +104,15 @@ export class HistoryMenu
     });
   }
 
-  private _addToHistory(text: string, usage: number, pinned: boolean) {
+  private _addToHistory(text: string, usage = 1, pinned = false, copied_at = Date.now(), used_at = Date.now()) {
     let id = utils.hashCode(text);
-    let cbInfo = this.lookup.get(id);
+    let cbInfo = this._lookup.get(id);
     if (cbInfo === undefined) {
       cbInfo = new MenuItem.ClipboardInfo(
-        text, usage, pinned
+        text, usage, pinned, copied_at, used_at
       );
 
-      this.lookup.set(id, cbInfo);
+      this._lookup.set(id, cbInfo);
     } else {
       cbInfo.usage++;
     }
@@ -108,33 +121,43 @@ export class HistoryMenu
     log.debug(`added '${cbInfo.display()}'`);
   }
 
-  onRemoveItem(item: typeof MenuItem.MenuItem) {
+  private _onRemoveItem(item: typeof MenuItem.MenuItem) {
     item.destroy();
   }
 
-  onPinItem(item: typeof MenuItem.MenuItem) {
-    item.cbInfo.pinned = true;
+  private _onPinItem(item: typeof MenuItem.MenuItem) {
+    log.debug(`pin ${item.cbInfo.display()}`);
+
+    if (item.cbInfo.pinned) {
+      item.cbInfo.pinned = false;
+    } else {
+      item.cbInfo.pinned = true;
+    }
+
+    this._rebuildMenu();
   }
 
-  onActivateItem(item: typeof MenuItem.MenuItem) {
-    this.updateClipboard(item.cbInfo.text);
+  private _onActivateItem(item: typeof MenuItem.MenuItem) {
+    this._updateClipboard(item.cbInfo.text);
   }
 
-  loadHistory(history: any) {
+  public loadHistory(history: any) {
     history.forEach((value: any) => {
       this._addToHistory(
         value.text,
         value.usage,
-        value.pinned
+        value.pinned,
+        value.copied_at,
+        value.used_at,
       );
     });
 
     this._rebuildMenu();
   }
 
-  getHistory(onlyPinned: boolean): any {
+  public getHistory(onlyPinned: boolean): any {
     let history: any = [];
-    this.lookup.forEach((cbInfo, _) => {
+    this._lookup.forEach((cbInfo, _) => {
       if (onlyPinned) {
         if (cbInfo.pinned) {
           history.push(cbInfo);
