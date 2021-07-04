@@ -2,6 +2,7 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 import * as ClipboardPanel from 'clipboardPanel';
+import * as log from 'log';
 
 const Main = imports.ui.main;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -15,24 +16,30 @@ export class GnomeExtension {
   _clipboardPanel: any | null;
 
   constructor(uuid: any) {
-      this._uuid = uuid;
+    this._uuid = uuid;
 
-      ExtensionUtils.initTranslations(GETTEXT_DOMAIN);
+    ExtensionUtils.initTranslations(GETTEXT_DOMAIN);
   }
 
   enable() {
-      this._clipboardPanel = new ClipboardPanel.ClipboardPanel();
-      Main.panel.addToStatusArea(this._uuid, this._clipboardPanel);
+    log.info(`enabling...`);
+
+    this._clipboardPanel = new ClipboardPanel.ClipboardPanel();
+    Main.panel.addToStatusArea(this._uuid, this._clipboardPanel);
   }
 
   disable() {
-      this._clipboardPanel.destroy();
-      this._clipboardPanel = null;
+    log.info(`disabling...`);
+
+    this._clipboardPanel.destroy();
+    this._clipboardPanel = null;
   }
 }
 
 // @ts-ignore
 function init(meta) {
+  log.info(`initializing...`);
+
   return new GnomeExtension(meta.uuid);
 }
 

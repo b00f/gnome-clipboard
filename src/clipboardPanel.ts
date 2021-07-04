@@ -7,9 +7,7 @@ import * as HistoryMenu from 'historyMenu';
 import * as SearchBox from 'searchBox';
 import * as ActionBar from 'actionBar';
 import * as log from 'log';
-import * as utils from 'utils';
 
-const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
@@ -20,37 +18,38 @@ const ExtensionUtils = imports.misc.extensionUtils;
 export const ClipboardPanel = GObject.registerClass(
   class ClipboardPanel extends PanelMenu.Button {
 
-    _clipboardTimerID = 0;
-    _selectionOwnerChangedID = 0;
+    private _clipboardTimerID = 0;
+    private _selectionOwnerChangedID = 0;
+    private _openStateChangedID = 0;
+    private _keyPressEventID = 0;
 
     protected _init() {
-      this.clipboard = St.Clipboard.get_default();
-      this.settings = new Settings.ExtensionSettings();
+      this._settings = new Settings.ExtensionSettings();
 
       let path = GLib.get_user_cache_dir() + '/' + Me.uuid;
       this.store = new Store.Store(path);
 
       super._init(0.0, _("Gnome Clipboard"));
 
-      this.clipboardIcon = new St.Icon({
+      let clipboardIcon = new St.Icon({
         icon_name: 'edit-copy-symbolic',
         style_class: 'popup-menu-icon'
       })
-      this.add_actor(this.clipboardIcon);
+      this.add_actor(clipboardIcon);
 
-      this.setupMenu();
-      this.setupListener();
+      this._setupMenu();
+      this._setupListener();
 
-      this.historyMenu.loadHistory(this.store.load());
+      this._historyMenu.loadHistory(this.store.load());
 
-      this.settings.onChanged(this.onSettingsChanged.bind(this));
+      this._settings.onChanged(this._onSettingsChanged.bind(this));
 
       // Clear search when re-open the menu and set focus on search box
-      this.historyMenu.connect('open-state-changed', (_widget: any, open: boolean) => {
+      this._openStateChangedID = this._historyMenu.connect('open-state-changed', (_widget: any, open: boolean) => {
         log.debug("open-state-changed event");
         if (open) {
           let t = Mainloop.timeout_add(50, () => {
-            this.searchBox.setText('');
+            this._searchBox.setText('');
 
             // Don't invoke timer again
             Mainloop.source_remove(t);
@@ -59,87 +58,77 @@ export const ClipboardPanel = GObject.registerClass(
         }
       });
 
-      global.stage.connect('key-press-event', (_widget: any, _event: any, _data: any) => {
+
+      this._keyPressEventID = this._historyMenu.scrollView.connect('key-press-event', (_widget: any, _event: any, _data: any) => {
         log.debug("key-press event");
 
-        global.stage.set_key_focus(this.searchBox.searchEntry);
-        return true;
+        global.stage.set_key_focus(this._searchBox.searchEntry);
       });
     }
 
-    setupMenu() {
+    private _setupMenu() {
       this.menu.box.style_class = 'popup-menu-content gnome-clipboard';
 
-      this.searchBox = new SearchBox.SearchBox();
-      this.menu.addMenuItem(this.searchBox);
+      this._searchBox = new SearchBox.SearchBox();
+      this.menu.addMenuItem(this._searchBox);
 
       let separator1 = new PopupMenu.PopupSeparatorMenuItem();
       this.menu.addMenuItem(separator1);
 
-      this.historyMenu = new HistoryMenu.HistoryMenu(
-        this.settings,
-        this.updateClipboard.bind(this)
+      this._historyMenu = new HistoryMenu.HistoryMenu(
+        this._settings,
+        this._updateClipboard.bind(this)
       );
-      this.menu.addMenuItem(this.historyMenu);
+      this.menu.addMenuItem(this._historyMenu);
 
       let separator2 = new PopupMenu.PopupSeparatorMenuItem();
       this.menu.addMenuItem(separator2);
 
-      this.actionBar = new ActionBar.ActionBar();
-      this.menu.addMenuItem(this.actionBar);
+      this._actionBar = new ActionBar.ActionBar();
+      this.menu.addMenuItem(this._actionBar);
 
-      this.actionBar.registerOpenSettings(function () {
+      this._actionBar.registerOpenSettings(function () {
         ExtensionUtils.openPrefs();
       })
 
-      this.searchBox.onTextChanged(this.onSearchItemChanged.bind(this));
+      this._searchBox.onTextChanged(this._onSearchItemChanged.bind(this));
     }
 
-    updateClipboard(text: string) {
+    private _updateClipboard(text: string) {
       log.debug(`update clipboard: ${text}`);
 
-      this.clipboard.set_text(St.ClipboardType.CLIPBOARD, text);
-      this.toggle();
+      let clipboard = St.Clipboard.get_default();
+      clipboard.set_text(St.ClipboardType.CLIPBOARD, text);
+
+      this._toggle();
     }
 
-    onSettingsChanged() {
+    private _onSettingsChanged() {
       log.info("settings changed");
 
-      this.setupListener();
-      this.historyMenu.refresh();
-      this.saveHistory();
+      this._setupListener();
+      this._historyMenu.refresh();
+      this._saveHistory();
     }
 
-    onSearchItemChanged() {
-      let query = this.searchBox.getText().toLowerCase();
-      this.historyMenu.filterItems(query);
+    private _onSearchItemChanged() {
+      let query = this._searchBox.getText().toLowerCase();
+      this._historyMenu.filterItems(query);
     }
 
-    setupListener() {
-      let selection = null;
-      try {
-        selection = Shell.Global.get().get_display().get_selection();
-      } catch (err) {
-        log.error(`unable to get selection: ${err}`);
-      }
-
+    private _setupListener() {
       // Stop and remove previous timer, if exists
-      if (this._clipboardTimerID) {
-        Mainloop.source_remove(this._clipboardTimerID);
-        this._clipboardTimerID = 0;
-      }
+      this._disconnectClipboardTimer();
 
-      if (this._selectionOwnerChangedID) {
-        selection.disconnect(this._selectionOwnerChangedID);
-        this._selectionOwnerChangedID = 0;
-      }
+      // Disconnect from previous event listener
+      this._disconnectSelectionOwnerChanged();
 
-      if (this.settings.clipboardTimer()) {
-        let interval = this.settings.clipboardTimerIntervalInMillisecond();
+      if (this._settings.clipboardTimer()) {
+        let interval = this._settings.clipboardTimerIntervalInMillisecond();
         log.info(`set timer every ${interval} ms`);
 
         this._clipboardTimerID = Mainloop.timeout_add(interval, () => {
-          this.updateHistory();
+          this._updateHistory();
 
           // invoke the timer again
           return true;
@@ -148,9 +137,10 @@ export const ClipboardPanel = GObject.registerClass(
         log.debug(`_clipboardTimerID: ${this._clipboardTimerID}`);
 
       } else {
+        let selection = Shell.Global.get().get_display().get_selection();
         this._selectionOwnerChangedID = selection.connect('owner-changed', (_selection: any, selectionType: any, _selectionSource: any) => {
           if (selectionType === Meta.SelectionType.SELECTION_CLIPBOARD) {
-            this.updateHistory();
+            this._updateHistory();
           }
         });
         log.debug(`_selectionOwnerChangedID: ${this._selectionOwnerChangedID}`);
@@ -158,44 +148,59 @@ export const ClipboardPanel = GObject.registerClass(
     }
 
 
-    updateHistory() {
-      if (this.actionBar.privateMode()) return; // Private mode, do not.
+    private _updateHistory() {
+      if (this._actionBar.privateMode()) return; // Private mode, do not.
 
       let menu = this;
       // St.Clipboard definition:
       // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/master/src/st/st-clipboard.h
-      this.clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
+      this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
         log.debug(`clipboard content: ${text}`);
 
         if (menu.historyMenu.addClipboard(text)) {
-          this.saveHistory();
+          this._saveHistory();
         }
       });
     }
 
-    private saveHistory() {
-      this.store.save(this.historyMenu.getHistory(false));
+    private _disconnectClipboardTimer() {
+      if (this._clipboardTimerID) {
+        Mainloop.source_remove(this._clipboardTimerID);
+        this._clipboardTimerID = 0;
+      }
     }
 
-    toggle() {
+    private _disconnectSelectionOwnerChanged() {
+      if (this._selectionOwnerChangedID) {
+        let selection = Shell.Global.get().get_display().get_selection();
+        selection.disconnect(this._selectionOwnerChangedID);
+        this._selectionOwnerChangedID = 0;
+      }
+    }
+
+    private _saveHistory() {
+      this.store.save(this._historyMenu.getHistory(false));
+    }
+
+    private _toggle() {
       this.menu.toggle();
     }
-    close() {
-      this.menu.close();
-    }
 
+    public destroy() {
+      this._disconnectClipboardTimer();
+      this._disconnectSelectionOwnerChanged();
 
+      if (this._openStateChangedID) {
+        this._historyMenu.disconnect(this._openStateChangedID);
+        this._openStateChangedID = 0;
+      }
 
+      if (this._keyPressEventID) {
+        this._historyMenu.disconnect(this._keyPressEventID);
+        this._keyPressEventID = 0;
+      }
 
-    enable() {
-      log.info(`enabling...`);
-      Main.panel.addToStatusArea('gnome_clipboard_button', this);
-    }
-
-    disable() {
-      log.info(`disabling...`);
-      utils.log_object(Main.panel);
-      Main.panel.removeFromStatusArea('gnome_clipboard_button', this);
+      super.destroy();
     }
   }
 );
