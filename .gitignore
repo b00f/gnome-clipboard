@@ -1,7 +1,5 @@
 *.zip
 *.mo
-node_modules
-yarn.lock
 build
 dist
 *.compiled
