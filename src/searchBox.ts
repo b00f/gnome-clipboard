@@ -1,7 +1,7 @@
 const { St, GObject } = imports.gi;
 const PopupMenu = imports.ui.popupMenu
 
-export var SearchBox = GObject.registerClass(
+export const SearchBox = GObject.registerClass(
   class SearchBox extends PopupMenu.PopupBaseMenuItem {
 
     protected _init() {
