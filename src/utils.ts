@@ -65,7 +65,7 @@ export function truncate(text: string, length: number): string {
 
 
 // @ts-ignore
-export function spawn_async(...args) {
+export function spawnAsync(...args) {
   try {
     let flags = GLib.SpawnFlags.SEARCH_PATH;
     GLib.spawn_async(null, args, null, flags, null);
@@ -75,7 +75,7 @@ export function spawn_async(...args) {
 }
 
 // @ts-ignore
-export function spawn_sync(...args) {
+export function spawnSync(...args) {
   try {
     let flags = GLib.SpawnFlags.SEARCH_PATH;
     let [_success, _out, err, _errno] = GLib.spawn_sync(null, args, null, flags, null);
