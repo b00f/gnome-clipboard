@@ -55,6 +55,7 @@ update-transaltions:
 	done
 
 test_wayland: install
+	# https://wiki.gnome.org/Attic/GnomeShell/Extensions/Writing#Extension_Creation
 	@dbus-run-session -- gnome-shell --nested --wayland
 
 test: depcheck compile install enable restart-shell
