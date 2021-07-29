@@ -126,6 +126,14 @@ export function buildPrefsWidget() {
         addRowAndBindSetting(prefsGrid, widget, Settings.TIMER_INTERVAL, _("Timer interval (Millisecond):"));
     }
 
+    {
+        let widget = new Gtk.Switch({
+            halign: Gtk.Align.END,
+        });
+
+        addRowAndBindSetting(prefsGrid, widget, Settings.SAVE_PINNED, "Save only pinned items:");
+    }
+
     prefsFrame.add(prefsGrid);
 
     let prefsFrame2 = new Gtk.Frame({

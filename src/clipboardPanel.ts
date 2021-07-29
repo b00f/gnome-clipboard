@@ -6,7 +6,9 @@ import * as Settings from 'settings';
 import * as HistoryMenu from 'historyMenu';
 import * as SearchBox from 'searchBox';
 import * as ActionBar from 'actionBar';
+import * as utils from 'utils';
 import * as log from 'log';
+import * as ClipboardItem from 'clipboardItem';
 
 const Mainloop = imports.mainloop;
 const PopupMenu = imports.ui.popupMenu;
@@ -23,11 +25,14 @@ export const ClipboardPanel = GObject.registerClass(
     private _openStateChangedID = 0;
     private _keyPressEventID = 0;
     // @ts-ignore
+    private _history: Map<number, ClipboardItem.ClipboardItem>;
+    // @ts-ignore
     private _historyMenu: HistoryMenu.HistoryMenu;
     // @ts-ignore
     private _settings: Settings.ExtensionSettings;
 
     protected _init() {
+      this._history = new Map();
       this._clipboard = St.Clipboard.get_default();
       this._settings = new Settings.ExtensionSettings();
 
@@ -45,7 +50,7 @@ export const ClipboardPanel = GObject.registerClass(
       this._setupMenu();
       this._setupListener();
 
-      this._historyMenu.loadHistory(this.store.load());
+      this._loadHistory(this.store.load());
       this._settings.onChanged(this._onSettingsChanged.bind(this));
 
       // Clear search when re-open the menu and set focus on search box
@@ -54,6 +59,7 @@ export const ClipboardPanel = GObject.registerClass(
         if (open) {
           let t = Mainloop.timeout_add(50, () => {
             this._searchBox.setText('');
+            global.stage.set_key_focus(this._searchBox.searchEntry);
 
             // Don't invoke timer again
             Mainloop.source_remove(t);
@@ -62,7 +68,6 @@ export const ClipboardPanel = GObject.registerClass(
         }
       });
 
-
       this._keyPressEventID = this._historyMenu.scrollView.connect('key-press-event', (_widget: any, _event: any, _data: any) => {
         log.debug("key-press event");
 
@@ -70,7 +75,8 @@ export const ClipboardPanel = GObject.registerClass(
       });
 
       this._actionBar.onRemoveAll(() => {
-        this._historyMenu.removeAll();
+        this._history.clear();
+        this._rebuildMenu();
       });
 
       this._actionBar.onOpenSettings(() => {
@@ -90,8 +96,9 @@ export const ClipboardPanel = GObject.registerClass(
       this.menu.addMenuItem(separator1);
 
       this._historyMenu = new HistoryMenu.HistoryMenu(
-        this._settings,
-        this._updateClipboard.bind(this)
+        this._onActivateItem.bind(this),
+        this._onPinItem.bind(this),
+        this._onRemoveItem.bind(this),
       );
       this.menu.addMenuItem(this._historyMenu);
 
@@ -102,10 +109,33 @@ export const ClipboardPanel = GObject.registerClass(
       this.menu.addMenuItem(this._actionBar);
     }
 
-    private _updateClipboard(text: string) {
-      log.debug(`update clipboard: ${text}`);
+    private _onRemoveItem(item: ClipboardItem.ClipboardItem) {
+      this._history.delete(item.id());
+    }
 
-      this._clipboard.set_text(St.ClipboardType.CLIPBOARD, text);
+    private _onPinItem(item: ClipboardItem.ClipboardItem) {
+      log.debug(`pin ${item.display()}`);
+
+      if (item.pinned) {
+        item.pinned = false;
+      } else {
+        item.pinned = true;
+      }
+
+      let t = Mainloop.timeout_add(100, () => {
+        this._rebuildMenu();
+
+        // Don't invoke timer again
+        Mainloop.source_remove(t);
+        return false;
+      });
+    }
+
+    private _onActivateItem(item: ClipboardItem.ClipboardItem) {
+      log.debug(`update clipboard: ${item.display()}`);
+
+      item.usage++;
+      this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.text);
 
       this._toggle();
     }
@@ -114,13 +144,84 @@ export const ClipboardPanel = GObject.registerClass(
       log.info("settings changed");
 
       this._setupListener();
-      this._historyMenu.rebuildMenu();
+      this._rebuildMenu();
       this._saveHistory();
     }
 
     private _onSearch() {
       let query = this._searchBox.getText().toLowerCase();
       this._historyMenu.filterItems(query);
+    }
+
+    private addClipboard(text: string): boolean {
+      if (text === null || text.length === 0) {
+        return false;
+      }
+
+      let id = utils.hashCode(text);
+      if (id == this._selectedID) {
+        return false;
+      }
+
+      this._selectedID = id;
+      this._addToHistory(text);
+      this._rebuildMenu();
+
+      return true;
+    }
+
+    private _addToHistory(text: string, usage = 1, pinned = false, copiedAt = Date.now(), usedAt = Date.now()) {
+      let id = utils.hashCode(text);
+      let item = this._history.get(id);
+      if (item === undefined) {
+        item = new ClipboardItem.ClipboardItem(
+          text, usage, pinned, copiedAt, usedAt
+        );
+
+        this._history.set(id, item);
+      } else {
+        item.usage++;
+      }
+      item.updateLastUsed();
+
+      log.debug(`added '${item.display()}'`);
+    }
+
+    private _rebuildMenu() {
+      let arr = Array.from(this._history.values());
+      arr.sort((l: ClipboardItem.ClipboardItem, r: ClipboardItem.ClipboardItem): number => {
+        if (r.pinned && !l.pinned ) {
+          return 1;
+        }
+
+        if (!r.pinned && l.pinned ) {
+          return -1;
+        }
+
+        switch (this._settings.historySort()) {
+          case Settings.HISTORY_SORT_RECENT_USAGE:
+            return r.usedAt - l.usedAt;
+
+          case Settings.HISTORY_SORT_COPY_TIME:
+            return r.copiedAt - l.copiedAt;
+
+          case Settings.HISTORY_SORT_MOST_USAGE:
+          default:
+            if (r.usage = l.usage) {
+              return r.copiedAt - l.copiedAt;
+            }
+            return r.usage - l.usage;
+        }
+      });
+
+      let historySize = this._settings.historySize();
+      for (let i = historySize; i < arr.length; ++i) {
+        let item : any = arr.pop();
+        this._lookup.delete(item.id());
+      }
+
+      this._historyMenu.rebuildMenu(arr, this._selectedID);
+      this._onSearch();
     }
 
     private _setupListener() {
@@ -165,7 +266,7 @@ export const ClipboardPanel = GObject.registerClass(
       this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
         log.debug(`clipboard content: ${text}`);
 
-        if (menu._historyMenu.addClipboard(text)) {
+        if (menu.addClipboard(text)) {
           this._saveHistory();
         }
       });
@@ -186,8 +287,33 @@ export const ClipboardPanel = GObject.registerClass(
       }
     }
 
+    private _loadHistory(history: any) {
+      history.forEach((value: any) => {
+        this._addToHistory(
+          value.text,
+          value.usage,
+          value.pinned,
+          value.copiedAt,
+          value.usedAt,
+        );
+      });
+
+      this._rebuildMenu();
+    }
+
     private _saveHistory() {
-      this.store.save(this._historyMenu.getHistory(false));
+      let history: any = [];
+      this._history.forEach((item, _) => {
+        if (this._settings.savePinned()) {
+          if (item.pinned) {
+            history.push(item);
+          }
+        } else {
+          history.push(item);
+        }
+      })
+
+      this.store.save(history);
     }
 
     private _toggle() {

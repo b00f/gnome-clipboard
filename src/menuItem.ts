@@ -1,7 +1,7 @@
 // @ts-ignore
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
-import * as utils from 'utils';
+import * as ClipboardItem from 'clipboardItem';
 
 const St = imports.gi.St;
 const PopupMenu = imports.ui.popupMenu;
@@ -9,41 +9,13 @@ const GObject = imports.gi.GObject;
 const Clutter = imports.gi.Clutter;
 
 
-export class ClipboardInfo {
-  public text: string;
-  public usage: number;
-  public pinned: boolean;
-  public copiedAt: number;
-  public usedAt: number;
-
-  constructor(text: string, usage: number, pinned: boolean, copiedAt: number, usedAt: number) {
-    this.text = text;
-    this.usage = usage;
-    this.pinned = pinned;
-    this.copiedAt = copiedAt;
-    this.usedAt = usedAt;
-  }
-
-  id(): number {
-    return utils.hashCode(this.text);
-  }
-
-  display(): string {
-    return utils.truncate(this.text, 32);
-  }
-
-  updateLastUsed() {
-    this.usedAt = Date.now();
-  }
-}
-
 export var MenuItem = GObject.registerClass(
   class MenuItem extends PopupMenu.PopupBaseMenuItem {
     protected _init(
-      cbInfo: ClipboardInfo,
+      cbInfo: ClipboardItem.ClipboardItem,
       onActivate: (item: MenuItem) => void,
-      onRemove: (item: MenuItem) => void,
-      onPin: (item: MenuItem) => void) {
+      onPin: (item: MenuItem) => void,
+      onRemove: (item: MenuItem) => void) {
 
       super._init()
 

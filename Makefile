@@ -1,5 +1,5 @@
 EXT_NAME = gnome-clipboard
-UUID = $(EXT_NAME)@b00f.github.com
+UUID = $(EXT_NAME)@b00f.github.io
 BUNDLE = $(UUID).shell-extension.zip
 POT_FILE = ./po/$(EXT_NAME).pot
 SOURCES = src/*.ts src/*.css
@@ -19,6 +19,7 @@ depcheck:
 
 pack: compile
 	@gnome-extensions pack --force --gettext-domain=$(EXT_NAME) dist \
+		--extra-source=clipboardItem.js \
 		--extra-source=clipboardPanel.js \
 		--extra-source=prefs.js \
 		--extra-source=scrollMenu.js \

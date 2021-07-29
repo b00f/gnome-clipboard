@@ -23,6 +23,11 @@
       <summary>Timer interval (Millisecond)</summary>
     </key>
 
+    <key type="b" name="save-pinned">
+      <default>false</default>
+      <summary>Save only pinned items</summary>
+    </key>
+
     <key type="u" name="log-level">
       <default>3</default>
       <summary>

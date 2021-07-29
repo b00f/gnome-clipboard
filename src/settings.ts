@@ -19,6 +19,7 @@ export const HISTORY_SIZE = "history-size";
 export const HISTORY_SORT = "history-sort";
 export const CLIPBOARD_TIMER = "clipboard-timer";
 export const TIMER_INTERVAL = "timer-interval";
+export const SAVE_PINNED = "save-pinned";
 
 export const HISTORY_SORT_MOST_USAGE = 0;
 export const HISTORY_SORT_RECENT_USAGE = 1;
@@ -45,5 +46,9 @@ export class ExtensionSettings {
 
     clipboardTimerIntervalInMillisecond(): number {
         return this._settings.get_uint(TIMER_INTERVAL);
+    }
+
+    savePinned(): boolean {
+        return this._settings.get_boolean(SAVE_PINNED);
     }
 }
