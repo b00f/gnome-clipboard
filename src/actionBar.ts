@@ -14,82 +14,70 @@ export var ActionBar = GObject.registerClass(
       let actionsBox = new St.BoxLayout({
         vertical: false,
       });
-
       actionsBox.set_x_expand(true);
-      actionsBox.set_y_expand(true);
 
       // TODO:: Add tooltip
-      // Private mode switch
-      this.privateModeBtn = new PopupMenu.PopupSwitchMenuItem(
-        _("Private mode"), false, {
+      this._enableBtn = new PopupMenu.PopupSwitchMenuItem(
+        _("Enable"), false, {
+        style_class: 'action-bar-btn',
         reactive: true, hover: true,
       });
-      actionsBox.add(this.privateModeBtn);
+      this._enableBtn._ornamentLabel.visible = false;
+      this._enableBtn.set_x_expand(false);
+      actionsBox.add(this._enableBtn);
+
       // Add a spacer
       this.spacer = new PopupMenu.PopupBaseMenuItem();
+      this.spacer._ornamentLabel.visible = false;
       this.spacer.set_x_expand(true);
-      this.spacer.set_y_expand(true);
       actionsBox.add(this.spacer);
 
       // Add 'Clear' button which removes all items from cache
-      this.clearBtn = new PopupMenu.PopupBaseMenuItem({
-        style_class: 'ci-action-bar-btn'
+      this._clearBtn = new PopupMenu.PopupBaseMenuItem({
+        style_class: 'action-bar-btn'
       });
-
 
       this.clearIcon = new St.Icon({
-        icon_name: "gtk-clear-symbolic",
+        icon_name: "edit-delete-symbolic",
         style_class: 'popup-menu-icon',
-        hover: true,
-
       });
-      this.clearBtn.add_child(this.clearIcon);
-      this.clearBtn.set_x_expand(false);
-      this.clearBtn.set_y_expand(false);
-      this.clearBtn._ornamentLabel.visible = false;
-      actionsBox.add(this.clearBtn);
 
-      // TODO:: Add tooltip
+      this._clearBtn.add_child(this.clearIcon);
+      this._clearBtn.set_x_expand(false);
+      this._clearBtn._ornamentLabel.visible = false;
+      actionsBox.add(this._clearBtn);
+
       // Add 'Settings' menu item to open settings
-      this.settingsBtn = new PopupMenu.PopupBaseMenuItem({
-        style_class: 'ci-action-bar-btn'
+      this._settingsBtn = new PopupMenu.PopupBaseMenuItem({
+        style_class: 'action-bar-btn'
       });
 
       this.settingsIcon = new St.Icon({
-        icon_name: "gtk-preferences-symbolic",
+        icon_name: "emblem-system-symbolic",
         style_class: 'popup-menu-icon',
-        hover: true,
-
       });
-      this.settingsBtn.add_child(this.settingsIcon);
-      this.settingsBtn.set_x_expand(false);
-      this.settingsBtn.set_y_expand(false);
-      this.settingsBtn._ornamentLabel.visible = false;
-      actionsBox.add(this.settingsBtn);
+      this._settingsBtn.add_child(this.settingsIcon);
+      this._settingsBtn.set_x_expand(false);
+      this._settingsBtn._ornamentLabel.visible = false;
+      actionsBox.add(this._settingsBtn);
 
       this.actor.add(actionsBox);
     }
 
-    registerPrivateModeSwitch(callback: (state: any) => void) {
-      this.privateModeBtn.connect('toggled', (obj: any) => {
-        callback(obj.state);
-      });
-    }
-
-    registerRemoveAll(callback: () => void) {
-      this.clearBtn.connect('activate', (_obj: any) => {
+    onRemoveAll(callback: () => void) {
+      this._clearBtn.connect('activate', (_obj: any) => {
         callback();
       });
     }
 
-    registerOpenSettings(callback: () => void) {
-      this.settingsBtn.connect('activate', (_obj: any) => {
+    onOpenSettings(callback: () => void) {
+      this._settingsBtn.connect('activate', (_obj: any) => {
         callback();
       });
     }
 
-    privateMode() {
-      return this.privateModeBtn.state;
+    enable() {
+      return this._enableBtn.state;
     }
   }
 );

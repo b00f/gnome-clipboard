@@ -7,7 +7,7 @@ const { St } = imports.gi;
 const PopupMenu = imports.ui.popupMenu;
 
 // Derived from PopupMenuSection
-// https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/master/js/ui/popupMenu.js
+// https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/popupMenu.js
 
 export class ScrollMenu
   extends PopupMenu.PopupMenuSection {

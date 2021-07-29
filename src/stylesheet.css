@@ -12,17 +12,14 @@
     width: auto;
 }
 
-.gnome-clipboard .action-box {
+.gnome-clipboard .action-bar {
     padding: 0px;
     margin: 0px;
 }
 
-.gnome-clipboard .action-btn {
-    width: auto;
-}
-
-.gnome-clipboard .action-box-layout {
-    width: auto;
+.gnome-clipboard .action-bar-btn {
+    margin: 0px 6px 0px 6px;
+    padding: 6px 12px 6px 12px;
 }
 
 .gnome-clipboard .trash-item {

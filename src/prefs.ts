@@ -129,7 +129,7 @@ export function buildPrefsWidget() {
     prefsFrame.add(prefsGrid);
 
     let prefsFrame2 = new Gtk.Frame({
-        label: _("Preferences"),
+        label: _("Shortcuts"),
         margin: 18,
     });
 

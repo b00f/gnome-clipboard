@@ -26,10 +26,6 @@ export class HistoryMenu
     this._selectedID = 0;
   }
 
-  public refresh() {
-    this._rebuildMenu()
-  }
-
   public addClipboard(text: string): boolean {
     if (text === null || text.length === 0) {
       return false;
@@ -42,12 +38,12 @@ export class HistoryMenu
 
     this._selectedID = id;
     this._addToHistory(text);
-    this._rebuildMenu();
+    this.rebuildMenu();
 
     return true;
   }
 
-  private _rebuildMenu() {
+  public rebuildMenu() {
     super.removeAll();
 
     let items = new Array();
@@ -66,8 +62,8 @@ export class HistoryMenu
       items.push(item);
     });
 
-    let historySort = this._settings.historySort();
-    items.sort(function (l: typeof MenuItem.MenuItem, r: typeof MenuItem.MenuItem): number {
+
+    items.sort((l: typeof MenuItem.MenuItem, r: typeof MenuItem.MenuItem): number => {
       if (r.cbInfo.pinned && !l.cbInfo.pinned ) {
         return 1;
       }
@@ -76,17 +72,17 @@ export class HistoryMenu
         return -1;
       }
 
-      switch (historySort) {
+      switch (this._settings.historySort()) {
         case Settings.HISTORY_SORT_RECENT_USAGE:
-          return r.cbInfo.used_at - l.cbInfo.used_at;
+          return r.cbInfo.usedAt - l.cbInfo.usedAt;
 
         case Settings.HISTORY_SORT_COPY_TIME:
-          return r.cbInfo.copied_at - l.cbInfo.copied_at;
+          return r.cbInfo.copiedAt - l.cbInfo.copiedAt;
 
         case Settings.HISTORY_SORT_MOST_USAGE:
         default:
           if (r.cbInfo.usage = l.cbInfo.usage) {
-            return r.cbInfo.copied_at - l.cbInfo.copied_at;
+            return r.cbInfo.copiedAt - l.cbInfo.copiedAt;
           }
           return r.cbInfo.usage - l.cbInfo.usage;
       }
@@ -104,12 +100,12 @@ export class HistoryMenu
     });
   }
 
-  private _addToHistory(text: string, usage = 1, pinned = false, copied_at = Date.now(), used_at = Date.now()) {
+  private _addToHistory(text: string, usage = 1, pinned = false, copiedAt = Date.now(), usedAt = Date.now()) {
     let id = utils.hashCode(text);
     let cbInfo = this._lookup.get(id);
     if (cbInfo === undefined) {
       cbInfo = new MenuItem.ClipboardInfo(
-        text, usage, pinned, copied_at, used_at
+        text, usage, pinned, copiedAt, usedAt
       );
 
       this._lookup.set(id, cbInfo);
@@ -134,7 +130,7 @@ export class HistoryMenu
       item.cbInfo.pinned = true;
     }
 
-    this._rebuildMenu();
+    this.rebuildMenu();
   }
 
   private _onActivateItem(item: typeof MenuItem.MenuItem) {
@@ -147,12 +143,12 @@ export class HistoryMenu
         value.text,
         value.usage,
         value.pinned,
-        value.copied_at,
-        value.used_at,
+        value.copiedAt,
+        value.usedAt,
       );
     });
 
-    this._rebuildMenu();
+    this.rebuildMenu();
   }
 
   public getHistory(onlyPinned: boolean): any {

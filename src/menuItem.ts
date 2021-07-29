@@ -10,18 +10,18 @@ const Clutter = imports.gi.Clutter;
 
 
 export class ClipboardInfo {
-  text: string;
-  usage: number;
-  pinned: boolean;
-  copied_at: number;
-  used_at: number;
+  public text: string;
+  public usage: number;
+  public pinned: boolean;
+  public copiedAt: number;
+  public usedAt: number;
 
-  constructor(text: string, usage: number, pinned: boolean, copied_at: number, used_at: number) {
+  constructor(text: string, usage: number, pinned: boolean, copiedAt: number, usedAt: number) {
     this.text = text;
     this.usage = usage;
     this.pinned = pinned;
-    this.copied_at = copied_at;
-    this.used_at = used_at;
+    this.copiedAt = copiedAt;
+    this.usedAt = usedAt;
   }
 
   id(): number {
@@ -33,7 +33,7 @@ export class ClipboardInfo {
   }
 
   updateLastUsed() {
-    this.used_at = Date.now();
+    this.usedAt = Date.now();
   }
 }
 
@@ -80,7 +80,6 @@ export var MenuItem = GObject.registerClass(
           self.icon_name = "";
         }
       });
-
 
       let pinBtn = new St.Button({
         style_class: 'action-btn',

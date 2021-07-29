@@ -22,6 +22,10 @@ export const ClipboardPanel = GObject.registerClass(
     private _selectionOwnerChangedID = 0;
     private _openStateChangedID = 0;
     private _keyPressEventID = 0;
+    // @ts-ignore
+    private _historyMenu: HistoryMenu.HistoryMenu;
+    // @ts-ignore
+    private _settings: Settings.ExtensionSettings;
 
     protected _init() {
       this._clipboard = St.Clipboard.get_default();
@@ -42,7 +46,6 @@ export const ClipboardPanel = GObject.registerClass(
       this._setupListener();
 
       this._historyMenu.loadHistory(this.store.load());
-
       this._settings.onChanged(this._onSettingsChanged.bind(this));
 
       // Clear search when re-open the menu and set focus on search box
@@ -65,6 +68,16 @@ export const ClipboardPanel = GObject.registerClass(
 
         global.stage.set_key_focus(this._searchBox.searchEntry);
       });
+
+      this._actionBar.onRemoveAll(() => {
+        this._historyMenu.removeAll();
+      });
+
+      this._actionBar.onOpenSettings(() => {
+        ExtensionUtils.openPrefs();
+      })
+
+      this._searchBox.onTextChanged(this._onSearch.bind(this));
     }
 
     private _setupMenu() {
@@ -87,12 +100,6 @@ export const ClipboardPanel = GObject.registerClass(
 
       this._actionBar = new ActionBar.ActionBar();
       this.menu.addMenuItem(this._actionBar);
-
-      this._actionBar.registerOpenSettings(function () {
-        ExtensionUtils.openPrefs();
-      })
-
-      this._searchBox.onTextChanged(this._onSearchItemChanged.bind(this));
     }
 
     private _updateClipboard(text: string) {
@@ -107,11 +114,11 @@ export const ClipboardPanel = GObject.registerClass(
       log.info("settings changed");
 
       this._setupListener();
-      this._historyMenu.refresh();
+      this._historyMenu.rebuildMenu();
       this._saveHistory();
     }
 
-    private _onSearchItemChanged() {
+    private _onSearch() {
       let query = this._searchBox.getText().toLowerCase();
       this._historyMenu.filterItems(query);
     }
@@ -147,9 +154,10 @@ export const ClipboardPanel = GObject.registerClass(
       }
     }
 
-
     private _updateHistory() {
-      if (this._actionBar.privateMode()) return; // Private mode, do not.
+      if (this._actionBar.enable()) {
+        return;
+      }
 
       let menu = this;
       // St.Clipboard definition:

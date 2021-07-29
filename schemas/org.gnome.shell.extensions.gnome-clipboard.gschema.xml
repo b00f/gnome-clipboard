@@ -24,7 +24,7 @@
     </key>
 
     <key type="u" name="log-level">
-      <default>4</default>
+      <default>3</default>
       <summary>
           Derive some log4j level/order
           0 - OFF
@@ -35,8 +35,5 @@
       </summary>
     </key>
 
-    <key name="show-indicator" type="b">
-      <default>true</default>
-    </key>
   </schema>
 </schemalist>

@@ -1,21 +1,8 @@
 const St = imports.gi.St;
 const GObject = imports.gi.GObject;
 const ModalDialog = imports.ui.modalDialog;
-//const CheckBox = imports.ui.checkBox;
 const Clutter = imports.gi.Clutter;
 
-
-
-
-export function openConfirmDialog(
-  title: string,
-  message: string,
-  sub_message: string,
-  callback: () => void,
-  ok_label = _("OK"),
-  cancel_label = _("Cancel")) {
-  new ConfirmDialog(title, message + "\n" + sub_message, ok_label, cancel_label, callback).open();
-}
 
 export const ConfirmDialog = GObject.registerClass(
   class ConfirmDialog extends ModalDialog.ModalDialog {
@@ -23,54 +10,69 @@ export const ConfirmDialog = GObject.registerClass(
     protected _init(
       title: string,
       desc: string,
-      ok_label: string,
-      cancel_label: string,
+      okLabel: string,
+      cancelLabel: string,
       callback: () => void) {
-      super._init({
-        style_class: 'modal-dialog',
-      });
+        super._init();
 
-      let main_box = new St.BoxLayout({
-        // MMMM
-       // vertical: false,
-      });
-      this.contentLayout.add(main_box, { x_fill: true, y_fill: true });
+        let main_box = new St.BoxLayout({
+          vertical: false
+        });
+        this.contentLayout.add_child(main_box);
 
-      let message_box = new St.BoxLayout({
-        vertical: true
-      });
-      main_box.add(message_box, { y_align: St.Align.START });
+        let message_box = new St.BoxLayout({
+          vertical: true
+        });
+        main_box.add_child(message_box);
 
-      let subject_label = new St.Label({
-        style: `font-weight: 700`,
-        text: title
-      });
+        let subject_label = new St.Label({
+          style: 'font-weight: bold',
+          x_align: Clutter.ActorAlign.CENTER,
+          text: title
+        });
+        message_box.add_child(subject_label);
 
-      message_box.add(subject_label, { y_fill: true, y_align: St.Align.START });
+        let desc_label = new St.Label({
+          style: 'padding-top: 12px',
+          x_align: Clutter.ActorAlign.CENTER,
+          text: desc
+        });
+        message_box.add_child(desc_label);
 
-      let desc_label = new St.Label({
-        style: 'padding-top: 12px; ',
-        text: desc
-      });
-
-      message_box.add(desc_label, { y_fill: true, y_align: St.Align.START });
-
-      this.setButtons([
-        {
-          label: cancel_label,
-          action: () => {
-            this.close();
+        this.setButtons([
+          {
+            label: cancelLabel,
+            action: () => {
+              this.close();
+              _confirmDialog = null;
+            },
+            key: Clutter.Escape
           },
-          key: Clutter.Escape
-        },
-        {
-          label: ok_label,
-          action: () => {
-            this.close();
-            callback();
+          {
+            label: okLabel,
+            action: () => {
+              this.close();
+              callback();
+              _confirmDialog = null;
+            }
           }
-        }
-      ]);
+        ]);
     }
   }
 );
+
+let _confirmDialog : typeof ConfirmDialog = null ;
+
+export function openConfirmDialog(
+  title: string,
+  message: string,
+  subMessage: string,
+  callback: (data: any) => void,
+  okLabel = _("OK"),
+  cancelLabel = _("Cancel")) {
+    if (!_confirmDialog) {
+      _confirmDialog = new ConfirmDialog(title, message + "\n" + subMessage, okLabel, cancelLabel, callback);
+      _confirmDialog.open();
+    }
+
+}

@@ -13,7 +13,7 @@ export const _ = Gettext.gettext;
 
 export class GnomeExtension {
   _uuid: any;
-  _clipboardPanel: any | null;
+  _panel: any | null;
 
   constructor(uuid: any) {
     this._uuid = uuid;
@@ -24,15 +24,15 @@ export class GnomeExtension {
   enable() {
     log.info(`enabling...`);
 
-    this._clipboardPanel = new ClipboardPanel.ClipboardPanel();
-    Main.panel.addToStatusArea(this._uuid, this._clipboardPanel);
+    this._panel = new ClipboardPanel.ClipboardPanel();
+    Main.panel.addToStatusArea(this._uuid, this._panel);
   }
 
   disable() {
     log.info(`disabling...`);
 
-    this._clipboardPanel.destroy();
-    this._clipboardPanel = null;
+    this._panel.destroy();
+    this._panel = null;
   }
 }
 
