@@ -25,7 +25,11 @@ export function buildPrefsWidget() {
 
     let box = new Gtk.Box({
         orientation: Gtk.Orientation.VERTICAL,
-        margin: 18,
+        'margin-top': 18,
+		'margin-bottom': 18,
+		'margin-start': 18,
+		'margin-end': 18,
+        spacing: 18,
     });
 
     let prefsFrame = new Gtk.Frame({
@@ -34,12 +38,14 @@ export function buildPrefsWidget() {
     box.add(prefsFrame);
 
     let prefsGrid = new Gtk.Grid({
-        margin: 18,
         column_spacing: 12,
         row_spacing: 12,
         row_homogeneous: false,
         column_homogeneous: true,
-
+        'margin-top': 18,
+		'margin-bottom': 18,
+		'margin-start': 18,
+		'margin-end': 18,
     });
 
     let row = 0
@@ -138,7 +144,6 @@ export function buildPrefsWidget() {
 
     let prefsFrame2 = new Gtk.Frame({
         label: _("Shortcuts"),
-        margin: 18,
     });
 
     box.add(prefsFrame2);
