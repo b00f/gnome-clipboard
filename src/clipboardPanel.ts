@@ -256,7 +256,7 @@ export const ClipboardPanel = GObject.registerClass(
     }
 
     private _updateHistory() {
-      if (this._actionBar.enable()) {
+      if (!this._actionBar.enable()) {
         return;
       }
 

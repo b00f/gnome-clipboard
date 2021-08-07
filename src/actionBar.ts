@@ -18,7 +18,7 @@ export var ActionBar = GObject.registerClass(
 
       // TODO:: Add tooltip
       this._enableBtn = new PopupMenu.PopupSwitchMenuItem(
-        _("Enable"), false, {
+        _("Enable"), true, {
         style_class: 'action-bar-btn',
         reactive: true, hover: true,
       });
