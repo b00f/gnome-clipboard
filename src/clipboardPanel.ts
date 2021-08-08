@@ -217,7 +217,7 @@ export const ClipboardPanel = GObject.registerClass(
       let historySize = this._settings.historySize();
       for (let i = historySize; i < arr.length; ++i) {
         let item : any = arr.pop();
-        this._lookup.delete(item.id());
+        this._history.delete(item.id());
       }
 
       this._historyMenu.rebuildMenu(arr, this._selectedID);
