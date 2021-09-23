@@ -208,7 +208,7 @@ export const ClipboardPanel = GObject.registerClass(
 
           case Settings.HISTORY_SORT_MOST_USAGE:
           default:
-            if (r.usage = l.usage) {
+            if (r.usage == l.usage) {
               return r.copiedAt - l.copiedAt;
             }
             return r.usage - l.usage;
