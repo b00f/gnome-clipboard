@@ -76,6 +76,7 @@ export const ClipboardPanel = GObject.registerClass(
 
       this._actionBar.onRemoveAll(() => {
         this._history.clear();
+        this._saveHistory();
         this._rebuildMenu();
       });
 
@@ -132,7 +133,7 @@ export const ClipboardPanel = GObject.registerClass(
     }
 
     private _onActivateItem(item: ClipboardItem.ClipboardItem) {
-      log.debug(`update clipboard: ${item.display()}`);
+      log.debug(`update clipboard: ${item.display()} usage: ${item.usage}`);
 
       item.usage++;
       this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.text);
@@ -184,7 +185,7 @@ export const ClipboardPanel = GObject.registerClass(
       }
       item.updateLastUsed();
 
-      log.debug(`added '${item.display()}'`);
+      log.debug(`added '${item.display()}' usage: ${item.usage}`);
     }
 
     private _rebuildMenu() {
@@ -260,13 +261,12 @@ export const ClipboardPanel = GObject.registerClass(
         return;
       }
 
-      let menu = this;
       // St.Clipboard definition:
       // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/master/src/st/st-clipboard.h
       this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
         log.debug(`clipboard content: ${text}`);
 
-        if (menu.addClipboard(text)) {
+        if (this.addClipboard(text)) {
           this._saveHistory();
         }
       });

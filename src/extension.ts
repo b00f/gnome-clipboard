@@ -38,7 +38,7 @@ export class GnomeExtension {
 
 // @ts-ignore
 function init(meta) {
-  log.info(`initializing...`);
+  log.info(`initializing Gnome Clipboard version ${Me.metadata.version} ...`);
 
   return new GnomeExtension(meta.uuid);
 }
