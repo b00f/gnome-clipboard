@@ -140,6 +140,14 @@ export function buildPrefsWidget() {
         addRowAndBindSetting(prefsGrid, widget, Settings.SAVE_PINNED, "Save only pinned items:");
     }
 
+    {
+        let widget = new Gtk.Switch({
+            halign: Gtk.Align.END,
+        });
+
+        addRowAndBindSetting(prefsGrid, widget, Settings.SHOW_NOTIFICATIONS, "Show notifications");
+    }
+
     prefsFrame.add(prefsGrid);
 
     let prefsFrame2 = new Gtk.Frame({

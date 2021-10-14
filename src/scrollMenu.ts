@@ -21,7 +21,6 @@ export class ScrollMenu
       clip_to_allocation: true,
     });
 
-
     // Scroll bar policy
     this.scrollView.set_policy(St.PolicyType.NEVER, St.PolicyType.AUTOMATIC);
     this.scrollViewSection = new PopupMenu.PopupMenuSection();
@@ -53,5 +52,13 @@ export class ScrollMenu
 
   removeAll() {
     this.scrollViewSection.removeAll();
+  }
+
+  scrollToBottom() {
+    // TODO: Fix me
+    // let vAdjust = this.scrollView.vscroll.adjustment;
+    // vAdjust.value = vAdjust.upper - vAdjust.page_size;
+
+    // log.debug(`scroll ${vAdjust.value}`)
   }
 };

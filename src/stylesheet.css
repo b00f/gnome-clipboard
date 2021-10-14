@@ -13,13 +13,13 @@
 }
 
 .gnome-clipboard .action-bar {
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0px 8px 0px 0px;
 }
 
 .gnome-clipboard .action-bar-btn {
-    margin: 0px 6px 0px 6px;
-    padding: 6px 12px 6px 12px;
+    margin: 0px 4px 0px 4px;
+    padding: 4px 12px 4px 12px;
 }
 
 .gnome-clipboard .pin-icon {

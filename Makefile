@@ -23,6 +23,7 @@ pack: compile
 		--extra-source=clipboardPanel.js \
 		--extra-source=prefs.js \
 		--extra-source=scrollMenu.js \
+		--extra-source=history.js \
 		--extra-source=historyMenu.js \
 		--extra-source=confirmDialog.js \
 		--extra-source=menuItem.js \

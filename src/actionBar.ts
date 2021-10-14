@@ -14,7 +14,6 @@ export var ActionBar = GObject.registerClass(
       let actionsBox = new St.BoxLayout({
         vertical: false,
       });
-      actionsBox.set_x_expand(true);
 
       // TODO:: Add tooltip
       this._enableBtn = new PopupMenu.PopupSwitchMenuItem(
@@ -23,45 +22,87 @@ export var ActionBar = GObject.registerClass(
         reactive: true, hover: true,
       });
       this._enableBtn._ornamentLabel.visible = false;
-      this._enableBtn.set_x_expand(false);
       actionsBox.add(this._enableBtn);
 
       // Add a spacer
-      this.spacer = new PopupMenu.PopupBaseMenuItem();
-      this.spacer._ornamentLabel.visible = false;
-      this.spacer.set_x_expand(true);
-      actionsBox.add(this.spacer);
+      let spacer = new PopupMenu.PopupBaseMenuItem();
+      spacer._ornamentLabel.visible = false;
+      actionsBox.add(spacer);
 
-      // Add 'Clear' button which removes all items from cache
+      // 'Clear' button which removes all items from cache
       this._clearBtn = new PopupMenu.PopupBaseMenuItem({
         style_class: 'action-bar-btn'
       });
 
-      this.clearIcon = new St.Icon({
+      let clearIcon = new St.Icon({
         icon_name: "edit-delete-symbolic",
         style_class: 'popup-menu-icon',
       });
 
-      this._clearBtn.add_child(this.clearIcon);
-      this._clearBtn.set_x_expand(false);
+      this._clearBtn.add_child(clearIcon);
       this._clearBtn._ornamentLabel.visible = false;
       actionsBox.add(this._clearBtn);
 
-      // Add 'Settings' menu item to open settings
+      // 'Settings' button to open the settings dialog
       this._settingsBtn = new PopupMenu.PopupBaseMenuItem({
         style_class: 'action-bar-btn'
       });
 
-      this.settingsIcon = new St.Icon({
+      let settingsIcon = new St.Icon({
         icon_name: "emblem-system-symbolic",
         style_class: 'popup-menu-icon',
       });
-      this._settingsBtn.add_child(this.settingsIcon);
-      this._settingsBtn.set_x_expand(false);
+      this._settingsBtn.add_child(settingsIcon);
       this._settingsBtn._ornamentLabel.visible = false;
       actionsBox.add(this._settingsBtn);
 
+      // 'Prev' button to copy the previous item
+      this._prevBtn = new PopupMenu.PopupBaseMenuItem({
+        style_class: 'action-bar-btn'
+      });
+
+      let prevIcon = new St.Icon({
+        icon_name: "go-previous-symbolic",
+        style_class: 'popup-menu-icon',
+      });
+      this._prevBtn.add_child(prevIcon);
+      this._prevBtn._ornamentLabel.visible = false;
+      actionsBox.add(this._prevBtn);
+
+      // 'Next' button to copy the next item
+      this._nextBtn = new PopupMenu.PopupBaseMenuItem({
+        style_class: 'action-bar-btn'
+      });
+
+      let nextIcon = new St.Icon({
+        icon_name: "go-next-symbolic",
+        style_class: 'popup-menu-icon',
+      });
+      this._nextBtn.add_child(nextIcon);
+      this._nextBtn._ornamentLabel.visible = false;
+      actionsBox.add(this._nextBtn);
+
       this.actor.add(actionsBox);
+    }
+
+    enableNextButton(_enable: boolean) {
+      // TODO: fix me
+    }
+
+    enablePrevButton(_enable: boolean) {
+      // TODO: fix me
+    }
+
+    onNextItem(callback: () => void) {
+      this._nextBtn.connect('activate', (_obj: any) => {
+        callback();
+      });
+    }
+
+    onPrevItem(callback: () => void) {
+      this._prevBtn.connect('activate', (_obj: any) => {
+        callback();
+      });
     }
 
     onRemoveAll(callback: () => void) {

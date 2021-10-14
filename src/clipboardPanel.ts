@@ -4,6 +4,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 import * as Store from 'store';
 import * as Settings from 'settings';
 import * as HistoryMenu from 'historyMenu';
+import * as History from 'history';
 import * as SearchBox from 'searchBox';
 import * as ActionBar from 'actionBar';
 import * as utils from 'utils';
@@ -11,6 +12,7 @@ import * as log from 'log';
 import * as ClipboardItem from 'clipboardItem';
 
 const Mainloop = imports.mainloop;
+const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
 const PanelMenu = imports.ui.panelMenu;
 const { St, GObject, Meta, Shell, GLib } = imports.gi;
@@ -25,14 +27,16 @@ export const ClipboardPanel = GObject.registerClass(
     private _openStateChangedID = 0;
     private _keyPressEventID = 0;
     // @ts-ignore
-    private _history: Map<number, ClipboardItem.ClipboardItem>;
+    private _history: History.History;
     // @ts-ignore
     private _historyMenu: HistoryMenu.HistoryMenu;
     // @ts-ignore
     private _settings: Settings.ExtensionSettings;
+    // @ts-ignore
+    private _actionBar: ActionBar.ActionBar;
 
     protected _init() {
-      this._history = new Map();
+      this._history = new History.History();
       this._clipboard = St.Clipboard.get_default();
       this._settings = new Settings.ExtensionSettings();
 
@@ -82,6 +86,14 @@ export const ClipboardPanel = GObject.registerClass(
 
       this._actionBar.onOpenSettings(() => {
         ExtensionUtils.openPrefs();
+      })
+
+      this._actionBar.onNextItem(() => {
+        this._selectNextItem();
+      })
+
+      this._actionBar.onPrevItem(() => {
+        this._selectPrevItem();
       })
 
       this._searchBox.onTextChanged(this._onSearch.bind(this));
@@ -135,12 +147,9 @@ export const ClipboardPanel = GObject.registerClass(
     private _onActivateItem(item: ClipboardItem.ClipboardItem) {
       log.debug(`update clipboard: ${item.display()} usage: ${item.usage}`);
 
-      item.usage++;
-      this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.text);
-
+      this._copyToClipboard(item);
       this._toggle();
     }
-
     private _onSettingsChanged() {
       log.info("settings changed");
 
@@ -166,9 +175,22 @@ export const ClipboardPanel = GObject.registerClass(
 
       this._selectedID = id;
       this._addToHistory(text);
-      this._rebuildMenu();
 
       return true;
+    }
+
+    private _selectPrevItem() {
+      let item = this._historyMenu.prevItem();
+      if (item) {
+        this._copyToClipboard(item);
+      }
+    }
+
+    private _selectNextItem() {
+      let item = this._historyMenu.nextItem();
+      if (item) {
+        this._copyToClipboard(item);
+      }
     }
 
     private _addToHistory(text: string, usage = 1, pinned = false, copiedAt = Date.now(), usedAt = Date.now()) {
@@ -179,50 +201,24 @@ export const ClipboardPanel = GObject.registerClass(
           text, usage, pinned, copiedAt, usedAt
         );
 
-        this._history.set(id, item);
+        this._history.set(item);
       } else {
-        item.usage++;
+        item.updateLastUsed();
       }
-      item.updateLastUsed();
 
       log.debug(`added '${item.display()}' usage: ${item.usage}`);
     }
 
     private _rebuildMenu() {
-      let arr = Array.from(this._history.values());
-      arr.sort((l: ClipboardItem.ClipboardItem, r: ClipboardItem.ClipboardItem): number => {
-        if (r.pinned && !l.pinned ) {
-          return 1;
-        }
+      // Trim the history
+      this._history.trim(this._settings.historySize());
 
-        if (!r.pinned && l.pinned ) {
-          return -1;
-        }
-
-        switch (this._settings.historySort()) {
-          case Settings.HISTORY_SORT_RECENT_USAGE:
-            return r.usedAt - l.usedAt;
-
-          case Settings.HISTORY_SORT_COPY_TIME:
-            return r.copiedAt - l.copiedAt;
-
-          case Settings.HISTORY_SORT_MOST_USAGE:
-          default:
-            if (r.usage == l.usage) {
-              return r.copiedAt - l.copiedAt;
-            }
-            return r.usage - l.usage;
-        }
-      });
-
-      let historySize = this._settings.historySize();
-      for (let i = historySize; i < arr.length; ++i) {
-        let item : any = arr.pop();
-        this._history.delete(item.id());
-      }
-
-      this._historyMenu.rebuildMenu(arr, this._selectedID);
+      let sorted = this._history.getSorted(this._settings.historySort());
+      this._historyMenu.rebuildMenu(sorted, this._selectedID);
       this._onSearch();
+
+      this._actionBar.enablePrevButton(this._historyMenu.hasPrevItem());
+      this._actionBar.enableNextButton(this._historyMenu.hasNextItem());
     }
 
     private _setupListener() {
@@ -262,14 +258,25 @@ export const ClipboardPanel = GObject.registerClass(
       }
 
       // St.Clipboard definition:
-      // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/master/src/st/st-clipboard.h
+      // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/src/st/st-clipboard.h
       this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
-        log.debug(`clipboard content: ${text}`);
+        log.info(`set clipboard content: ${text}`);
 
         if (this.addClipboard(text)) {
+          this._rebuildMenu();
           this._saveHistory();
         }
       });
+    }
+
+    private _copyToClipboard(item: ClipboardItem.ClipboardItem) {
+      this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.text);
+      this._selectedID = item.id();
+      this._rebuildMenu();
+
+      if (this._settings.showNotifications()) {
+        Main.notify(_("Clipboard updated"), item.text);
+      }
     }
 
     private _disconnectClipboardTimer() {
@@ -302,18 +309,8 @@ export const ClipboardPanel = GObject.registerClass(
     }
 
     private _saveHistory() {
-      let history: any = [];
-      this._history.forEach((item, _) => {
-        if (this._settings.savePinned()) {
-          if (item.pinned) {
-            history.push(item);
-          }
-        } else {
-          history.push(item);
-        }
-      })
-
-      this.store.save(history);
+      let items = this._history.items(this._settings.savePinned());
+      this.store.save(items);
     }
 
     private _toggle() {

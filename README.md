@@ -17,7 +17,7 @@ cd gnome-clipboard
 make install
 ```
 
-If you are going to test your changes, run: `make test`.
+If you are going to test your changes, run: `make test && make listen`.
 It automatically installs the extension and restart the gnome-shell.
 
 You can run `make test_wayland` to test this extension on [wayland](https://wayland.freedesktop.org/).

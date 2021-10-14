@@ -27,6 +27,7 @@ export class ClipboardItem {
     }
 
     public updateLastUsed() {
+      this.usage++;
       this.usedAt = Date.now();
     }
   }

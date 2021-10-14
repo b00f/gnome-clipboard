@@ -20,6 +20,7 @@ export const HISTORY_SORT = "history-sort";
 export const CLIPBOARD_TIMER = "clipboard-timer";
 export const TIMER_INTERVAL = "timer-interval";
 export const SAVE_PINNED = "save-pinned";
+export const SHOW_NOTIFICATIONS = "show-notifications";
 
 export const HISTORY_SORT_MOST_USAGE = 0;
 export const HISTORY_SORT_RECENT_USAGE = 1;
@@ -50,5 +51,9 @@ export class ExtensionSettings {
 
     savePinned(): boolean {
         return this._settings.get_boolean(SAVE_PINNED);
+    }
+
+    showNotifications(): boolean {
+        return this._settings.get_boolean(SHOW_NOTIFICATIONS);
     }
 }
