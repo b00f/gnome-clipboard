@@ -28,6 +28,11 @@
       <summary>Save only pinned items</summary>
     </key>
 
+    <key type="b" name="show-notifications">
+      <default>false</default>
+      <summary>Show notifications</summary>
+    </key>
+
     <key type="u" name="log-level">
       <default>3</default>
       <summary>
