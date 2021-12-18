@@ -34,7 +34,7 @@
     </key>
 
     <key type="u" name="log-level">
-      <default>3</default>
+      <default>0</default>
       <summary>
           Derive some log4j level/order
           0 - OFF
