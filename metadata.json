@@ -1,6 +1,7 @@
 {
   "shell-version": [
-    "40"
+    "40",
+    "41"
   ],
   "version": 67,
   "gettext-domain" : "gnome-clipboard",
