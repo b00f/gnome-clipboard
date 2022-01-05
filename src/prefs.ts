@@ -25,27 +25,27 @@ export function buildPrefsWidget() {
 
     let box = new Gtk.Box({
         orientation: Gtk.Orientation.VERTICAL,
-        'margin-top': 18,
-		'margin-bottom': 18,
-		'margin-start': 18,
-		'margin-end': 18,
+        margin_start: 18,
+        margin_end: 18,
+        margin_top: 18,
+        margin_bottom: 18,
         spacing: 18,
     });
 
     let prefsFrame = new Gtk.Frame({
         label: _("Preferences"),
     });
-    box.add(prefsFrame);
+    box.append(prefsFrame);
 
     let prefsGrid = new Gtk.Grid({
         column_spacing: 12,
         row_spacing: 12,
         row_homogeneous: false,
         column_homogeneous: true,
-        'margin-top': 18,
-		'margin-bottom': 18,
-		'margin-start': 18,
-		'margin-end': 18,
+        margin_start: 18,
+        margin_end: 18,
+        margin_top: 18,
+        margin_bottom: 18,
     });
 
     let row = 0
@@ -96,9 +96,9 @@ export function buildPrefsWidget() {
         let sortStore = new Gtk.ListStore();
         sortStore.set_column_types([GObject.TYPE_STRING]);
         let sorting = [
-            _("Most usage"),
-            _("Resent usage"),
             _("Copy time"),
+            _("Resent usage"),
+            _("Most usage"),
         ];
         for (let s of sorting) {
             sortStore.set(sortStore.append(), [0], [s]);
@@ -148,14 +148,13 @@ export function buildPrefsWidget() {
         addRowAndBindSetting(prefsGrid, widget, Settings.SHOW_NOTIFICATIONS, "Show notifications");
     }
 
-    prefsFrame.add(prefsGrid);
+    prefsFrame.set_child(prefsGrid);
 
     let prefsFrame2 = new Gtk.Frame({
         label: _("Shortcuts"),
     });
 
-    box.add(prefsFrame2);
-    box.show_all();
+    box.append(prefsFrame2);
 
     return box;
 }

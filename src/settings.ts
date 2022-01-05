@@ -22,9 +22,11 @@ export const TIMER_INTERVAL = "timer-interval";
 export const SAVE_PINNED = "save-pinned";
 export const SHOW_NOTIFICATIONS = "show-notifications";
 
-export const HISTORY_SORT_MOST_USAGE = 0;
+
+export const HISTORY_SORT_COPY_TIME = 0;
 export const HISTORY_SORT_RECENT_USAGE = 1;
-export const HISTORY_SORT_COPY_TIME = 2;
+export const HISTORY_SORT_MOST_USAGE = 2;
+
 export class ExtensionSettings {
     private _settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
 

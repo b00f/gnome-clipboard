@@ -1,8 +1,8 @@
 {
   "shell-version": [
-    "3.38"
+    "40"
   ],
-  "version": 66,
+  "version": 67,
   "gettext-domain" : "gnome-clipboard",
   "uuid": "gnome-clipboard@b00f.github.io",
   "name": "Gnome Clipboard",
