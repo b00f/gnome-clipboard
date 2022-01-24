@@ -10,6 +10,8 @@ To install the most recent official release: Visit Gnome Clipboard on the [Offic
 
 ### From source code
 
+Before compiling the code make sure you have installed Typescript.
+
 A `Makefile` is included. Then all you have to do is run the command below
 ```
 git clone https://github.com/b00f/gnome-clipboard.git
