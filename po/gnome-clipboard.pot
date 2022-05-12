@@ -44,7 +44,7 @@ msgstr ""
 msgid "Preferences"
 msgstr ""
 
-msgid "Resent usage"
+msgid "Recent usage"
 msgstr ""
 
 msgid "Shortcuts"

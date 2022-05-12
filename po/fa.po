@@ -43,7 +43,7 @@ msgstr "تایید"
 msgid "Preferences"
 msgstr "ترجیحات"
 
-msgid "Resent usage"
+msgid "Recent usage"
 msgstr "آخرین استفاده"
 
 msgid "Shortcuts"
