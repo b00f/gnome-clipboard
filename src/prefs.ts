@@ -97,7 +97,7 @@ export function buildPrefsWidget() {
         sortStore.set_column_types([GObject.TYPE_STRING]);
         let sorting = [
             _("Copy time"),
-            _("Resent usage"),
+            _("Recent usage"),
             _("Most usage"),
         ];
         for (let s of sorting) {
