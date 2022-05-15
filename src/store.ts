@@ -15,14 +15,14 @@ export class Store {
     let ret = GLib.mkdir_with_parents(dir, parseInt('0700', 8))
     if (ret == 0) {
       this._path = GLib.build_filenamev([dir, "history.json"]);
-      log.debug(`store location set to ${this._path}`);
+      log.info(`store location set to ${this._path}`);
     } else {
       log.error(`unable to create store directory: ${dir}`);
     }
   }
 
   load(): any {
-    log.debug(`try to load history.`);
+    log.info(`try to load history.`);
 
     let history: any = [];
     try {
@@ -39,7 +39,7 @@ export class Store {
   }
 
   save(history: any) {
-    log.debug(`try to save history.`);
+    log.info(`try to save history.`);
 
     try {
       let json = JSON.stringify(history);

@@ -24,15 +24,19 @@ export class GnomeExtension {
   enable() {
     log.info(`enabling...`);
 
-    this._panel = new ClipboardPanel.ClipboardPanel();
-    Main.panel.addToStatusArea(this._uuid, this._panel);
+    if (!this._panel) {
+      this._panel = new ClipboardPanel.ClipboardPanel();
+      Main.panel.addToStatusArea(this._uuid, this._panel);
+    }
   }
 
   disable() {
     log.info(`disabling...`);
 
-    this._panel.destroy();
-    this._panel = null;
+    if (this._panel) {
+      this._panel.destroy();
+      this._panel = null;
+    }
   }
 }
 

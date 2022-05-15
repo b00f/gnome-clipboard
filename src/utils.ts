@@ -57,7 +57,7 @@ export function truncate(text: string, length: number): string {
   text = text.replace(/\s+/g, ' ');
 
   if (text.length > length) {
-    text = text.substr(0, length - 1) + '...';
+    text = text.substring(0, length - 1) + '...';
   }
 
   return text;
