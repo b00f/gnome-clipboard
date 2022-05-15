@@ -10,6 +10,7 @@ export class ActionBar
   static {
     GObject.registerClass(this);
   }
+
   constructor() {
     super({
       activate: false,
@@ -111,7 +112,7 @@ export class ActionBar
     });
   }
 
-  onRemoveAll(callback: () => void) {
+  onClearHistory(callback: () => void) {
     this._clearBtn.connect('activate', (_obj: any) => {
       callback();
     });

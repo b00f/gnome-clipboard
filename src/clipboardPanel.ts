@@ -10,6 +10,7 @@ import * as ActionBar from 'actionBar';
 import * as utils from 'utils';
 import * as log from 'log';
 import * as ClipboardItem from 'clipboardItem';
+import * as ConfirmDialog from 'confirmDialog';
 
 const Mainloop = imports.mainloop;
 const Main = imports.ui.main;
@@ -90,10 +91,8 @@ export class ClipboardPanel
         global.stage.set_key_focus(this._searchBox.searchEntry);
       });
 
-    this._actionBar.onRemoveAll(() => {
-      this._history.clear();
-      this._saveHistory();
-      this._rebuildMenu();
+    this._actionBar.onClearHistory(() => {
+      this._onClearHistory();
     });
 
     this._actionBar.onOpenSettings(() => {
@@ -283,6 +282,20 @@ export class ClipboardPanel
     if (this._settings.showNotifications()) {
       Main.notify(_("Clipboard updated"), item.text);
     }
+  }
+
+  private _onClearHistory() {
+    const title = _("Clear history?");
+    const message = _("Are you sure you want to remove all items?");
+    const sub_message = _("This operation cannot be undone.");
+
+    ConfirmDialog.openConfirmDialog(title, message, sub_message, this._doClearHistory.bind(this), _("Empty"));
+  }
+
+  private _doClearHistory(){
+    this._history.clear();
+    this._saveHistory();
+    this._rebuildMenu();
   }
 
   private _disconnectClipboardTimer() {
