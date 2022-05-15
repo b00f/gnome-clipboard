@@ -9,6 +9,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 export class HistoryMenu
   extends ScrollMenu.ScrollMenu {
+
   private _onActivateItem: (item: ClipboardItem.ClipboardItem) => void;
   private _onPinItem: (item: ClipboardItem.ClipboardItem) => void;
   private _onRemoveItem: (item: ClipboardItem.ClipboardItem) => void;
@@ -77,16 +78,16 @@ export class HistoryMenu
     return this._prevItem != null;
   }
 
-  private onActivateItem(item: typeof MenuItem.MenuItem) {
+  private onActivateItem(item: MenuItem.MenuItem) {
     this._onActivateItem(item.cbInfo);
   }
 
-  private onRemoveItem(item: typeof MenuItem.MenuItem) {
+  private onRemoveItem(item: MenuItem.MenuItem) {
     item.destroy();
     this._onRemoveItem(item.cbInfo);
   }
 
-  private onPinItem(item: typeof MenuItem.MenuItem) {
+  private onPinItem(item: MenuItem.MenuItem) {
     this._onPinItem(item.cbInfo);
   }
 };
