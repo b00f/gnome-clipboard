@@ -17,9 +17,10 @@ export class ActionBar
       hover: false,
       style_class: 'action-bar',
     })
-
+    // disabled hover
     let actionsBox = new St.BoxLayout({
       vertical: false,
+      hover: false,
     });
 
     // TODO:: Add tooltip
@@ -31,8 +32,10 @@ export class ActionBar
     this._enableBtn._ornamentLabel.visible = false;
     actionsBox.add(this._enableBtn);
 
-    // Add a spacer
-    let spacer = new PopupMenu.PopupBaseMenuItem();
+    // Add a spacer, disabled the hover
+    let spacer = new PopupMenu.PopupBaseMenuItem({
+      hover: false,
+    });
     spacer._ornamentLabel.visible = false;
     actionsBox.add(spacer);
 
