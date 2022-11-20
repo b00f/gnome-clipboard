@@ -2,7 +2,8 @@
   "shell-version": [
     "40",
     "41",
-    "42"
+    "42",
+    "43"
   ],
   "version": 67,
   "gettext-domain" : "gnome-clipboard",
