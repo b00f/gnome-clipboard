@@ -1,6 +1,6 @@
 # Gnome Clipboard
 
-A gnome shell extension to manage your **Gnome Clipboard**.
+A gnome shell extension to manage the clipboard content in [Gnome](https://www.gnome.org/).
 
 It allows you to pin clipboard items, select them or remove them from the history.
 
