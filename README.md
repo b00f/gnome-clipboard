@@ -6,7 +6,7 @@ It allows you to pin clipboard items, select them, or remove them from the histo
 
 ## Installation
 
-To install the most recent official release, visit Gnome Clipboard on the
+To install the most recent release, visit Gnome Clipboard on the
 [Official GNOME Extensions](https://extensions.gnome.org/extension/4422/gnome-clipboard//) page.
 
 ### From source code
