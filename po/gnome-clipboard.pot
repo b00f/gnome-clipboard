@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-clipboard\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-14 21:16+0800\n"
+"POT-Creation-Date: 2023-07-11 01:41+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,13 +17,22 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "Are you sure you want to remove all items?"
+msgstr ""
+
 msgid "Cancel"
+msgstr ""
+
+msgid "Clear history?"
 msgstr ""
 
 msgid "Clipboard updated"
 msgstr ""
 
 msgid "Copy time"
+msgstr ""
+
+msgid "Empty"
 msgstr ""
 
 msgid "Enable"
@@ -48,6 +57,9 @@ msgid "Recent usage"
 msgstr ""
 
 msgid "Shortcuts"
+msgstr ""
+
+msgid "This operation cannot be undone."
 msgstr ""
 
 msgid "Timer interval (Millisecond):"

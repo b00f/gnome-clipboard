@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gnome-clipboard@b00f.github.io\n"
-"Report-Msgid-Bugs-To: https://github.com/b00f/gnome-clipboard/issues\n"
-"POT-Creation-Date: 2021-10-14 21:16+0800\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-07-11 01:41+0800\n"
 "PO-Revision-Date: 2023-05-22 16:03+0300\n"
 "Last-Translator: Sabri Ünal <libreajans@gmail.com>\n"
 "Language-Team: Turkish <takim@gnome.org.tr>\n"
@@ -19,14 +19,23 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 3.2.2\n"
 
+msgid "Are you sure you want to remove all items?"
+msgstr ""
+
 msgid "Cancel"
 msgstr "İptal"
+
+msgid "Clear history?"
+msgstr ""
 
 msgid "Clipboard updated"
 msgstr "Pano güncellendi"
 
 msgid "Copy time"
 msgstr "Kopyalanma zamanı"
+
+msgid "Empty"
+msgstr ""
 
 msgid "Enable"
 msgstr "Etkinleştir"
@@ -51,6 +60,9 @@ msgstr "Son kullanım"
 
 msgid "Shortcuts"
 msgstr "Kısayollar"
+
+msgid "This operation cannot be undone."
+msgstr ""
 
 msgid "Timer interval (Millisecond):"
 msgstr "Zamanlayıcı aralığı (Milisaniye):"
