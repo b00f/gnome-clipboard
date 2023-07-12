@@ -1,0 +1,68 @@
+# Language pt-br translations for gnome-clipboard package.
+# Copyright (C) 2023 THE gnome-clipboard'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-clipboard package.
+# Iago <iagorichard@outlook.com>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-clipboard\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-07-11 01:41+0800\n"
+"PO-Revision-Date: 2023-07-11 21:28-0300\n"
+"Last-Translator: Iago <iagorichard@outlook.com>\n"
+"Language-Team: Language pt-br\n"
+"Language: pt-br\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Are you sure you want to remove all items?"
+msgstr "Tem certeza de que deseja remover todos os itens?"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Clear history?"
+msgstr "Limpar histórico?"
+
+msgid "Clipboard updated"
+msgstr "Área de transferência atualizada"
+
+msgid "Copy time"
+msgstr "Copiar item"
+
+msgid "Empty"
+msgstr "Vazio"
+
+msgid "Enable"
+msgstr "Habilitado"
+
+msgid "Gnome Clipboard"
+msgstr "Área de transferência do Gnome"
+
+msgid "Maximum size of history:"
+msgstr "Tamanho máximo do histórico:"
+
+msgid "Most usage"
+msgstr "Mais usado"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Preferences"
+msgstr "Preferências"
+
+msgid "Recent usage"
+msgstr "Mais recente"
+
+msgid "Shortcuts"
+msgstr "Atalhos"
+
+msgid "This operation cannot be undone."
+msgstr "Essa operação não pode ser desfeita."
+
+msgid "Timer interval (Millisecond):"
+msgstr "Intervalo do temporizador (milissegundos):"
+
+msgid "Type here to search..."
+msgstr "Digite aqui para pesquisar..."
