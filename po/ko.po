@@ -1,7 +1,8 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the gnome-clipboard package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Korean translation of gnome-clipboard@b00f.github.io.
+# Copyright (C) 2023 gnome-clipboard@b00f.github.io's COPYRIGHT HOLDER
+# This file is distributed under the same license as the gnome-clipboard@b00f.github.io package.
+#
+# AUTHOR: https://github.com/mjkim0727
 #
 msgid ""
 msgstr ""

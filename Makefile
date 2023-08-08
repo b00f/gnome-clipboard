@@ -7,7 +7,7 @@ SOURCES = src/*.ts src/*.css
 all: depcheck pack
 
 compile:
-	sh scripts/transpile.sh
+	@sh scripts/transpile.sh
 
 depcheck:
 	@echo depcheck
