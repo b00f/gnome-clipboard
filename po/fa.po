@@ -17,22 +17,22 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Are you sure you want to remove all items?"
-msgstr ""
+msgstr "آیا اطمینان دارید که می‌خواهید همه آیتمها را حذف کنید؟"
 
 msgid "Cancel"
 msgstr "لغو"
 
 msgid "Clear history?"
-msgstr ""
+msgstr "پاک کردن تاریخچه"
 
 msgid "Clipboard updated"
-msgstr "محتویات کلیپبورد"
+msgstr "کلیپبورد بروز شد"
 
 msgid "Copy time"
 msgstr "زمان کپی"
 
 msgid "Empty"
-msgstr ""
+msgstr "خالی"
 
 msgid "Enable"
 msgstr "فعال"
@@ -59,7 +59,7 @@ msgid "Shortcuts"
 msgstr "میان‌برها"
 
 msgid "This operation cannot be undone."
-msgstr ""
+msgstr "این عملیات برگشت پذیر نیست."
 
 msgid "Timer interval (Millisecond):"
 msgstr "بازه زمانی تایمر (میلی ثانیه)"
