@@ -18,13 +18,13 @@ msgstr ""
 "X-Generator: Poedit 3.3.2\n"
 
 msgid "Are you sure you want to remove all items?"
-msgstr ""
+msgstr "모든 항목을 삭제하시겠습니까?"
 
 msgid "Cancel"
 msgstr "취소"
 
 msgid "Clear history?"
-msgstr ""
+msgstr "기록을 지우시겠습니까?"
 
 msgid "Clipboard updated"
 msgstr "클립보드 업데이트됨"
@@ -33,7 +33,7 @@ msgid "Copy time"
 msgstr "복사 시간"
 
 msgid "Empty"
-msgstr ""
+msgstr "비어 있음"
 
 msgid "Enable"
 msgstr "사용"
@@ -60,7 +60,7 @@ msgid "Shortcuts"
 msgstr "바로 가기"
 
 msgid "This operation cannot be undone."
-msgstr ""
+msgstr "이 동작은 취소할 수 없습니다."
 
 msgid "Timer interval (Millisecond):"
 msgstr "시간 간격 (밀리초):"
