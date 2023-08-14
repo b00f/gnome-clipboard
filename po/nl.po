@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the gnome-clipboard package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Hemen Stoffels <vistausss@fastmail.com>, JAAR.
 #
 msgid ""
 msgstr ""
@@ -16,6 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.3.2\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "Are you sure you want to remove all items?"
 msgstr "Weet u zeker dat u alle items wilt wissen?"
