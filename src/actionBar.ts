@@ -1,11 +1,22 @@
-const {
-  St,
-} = imports.gi;
-const PopupMenu = imports.ui.popupMenu;
-const GObject = imports.gi.GObject;
+import St from 'gi://St';
+import GObject from 'gi://GObject';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
+// We'll receive the gettext function from the parent
+let _ = (s: string) => s;
+
+export function init(gettextFunc: (s: string) => string) {
+    _ = gettextFunc;
+}
 
 export class ActionBar
   extends PopupMenu.PopupBaseMenuItem {
+
+  private _enableBtn: any;
+  private _clearBtn: any;
+  private _settingsBtn: any;
+  private _prevBtn: any;
+  private _nextBtn: any;
 
   static {
     GObject.registerClass(this);
@@ -19,32 +30,29 @@ export class ActionBar
       can_focus: false,
       style_class: 'action-bar',
     })
-    // disabled hover
+    
     let actionsBox = new St.BoxLayout({
       vertical: false,
       hover: false,
       can_focus: false,
     });
 
-    // TODO:: Add tooltip
     this._enableBtn = new PopupMenu.PopupSwitchMenuItem(
       _("Enable"), true, {
       style_class: 'action-bar-btn',
       reactive: true, hover: true,
     });
-    this._enableBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._enableBtn);
+    actionsBox.add_child(this._enableBtn);
 
-    // Add a spacer, disabled the hover
+    // Add a spacer
     let spacer = new PopupMenu.PopupBaseMenuItem({
       hover: false,
       reactive: false,
       activate: false,
     });
-    spacer._ornamentLabel.visible = false;
-    actionsBox.add(spacer);
+    actionsBox.add_child(spacer);
 
-    // 'Clear' button which removes all items from cache
+    // 'Clear' button
     this._clearBtn = new PopupMenu.PopupBaseMenuItem({
       style_class: 'action-bar-btn'
     });
@@ -55,10 +63,9 @@ export class ActionBar
     });
 
     this._clearBtn.add_child(clearIcon);
-    this._clearBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._clearBtn);
+    actionsBox.add_child(this._clearBtn);
 
-    // 'Settings' button to open the settings dialog
+    // 'Settings' button
     this._settingsBtn = new PopupMenu.PopupBaseMenuItem({
       style_class: 'action-bar-btn'
     });
@@ -68,10 +75,9 @@ export class ActionBar
       style_class: 'popup-menu-icon',
     });
     this._settingsBtn.add_child(settingsIcon);
-    this._settingsBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._settingsBtn);
+    actionsBox.add_child(this._settingsBtn);
 
-    // 'Prev' button to copy the previous item
+    // 'Prev' button
     this._prevBtn = new PopupMenu.PopupBaseMenuItem({
       style_class: 'action-bar-btn'
     });
@@ -81,10 +87,9 @@ export class ActionBar
       style_class: 'popup-menu-icon',
     });
     this._prevBtn.add_child(prevIcon);
-    this._prevBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._prevBtn);
+    actionsBox.add_child(this._prevBtn);
 
-    // 'Next' button to copy the next item
+    // 'Next' button
     this._nextBtn = new PopupMenu.PopupBaseMenuItem({
       style_class: 'action-bar-btn'
     });
@@ -94,18 +99,17 @@ export class ActionBar
       style_class: 'popup-menu-icon',
     });
     this._nextBtn.add_child(nextIcon);
-    this._nextBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._nextBtn);
+    actionsBox.add_child(this._nextBtn);
 
-    this.actor.add(actionsBox);
+    this.add_child(actionsBox);
   }
 
   enableNextButton(_enable: boolean) {
-    // TODO: fix me
+    // TODO: implement
   }
 
   enablePrevButton(_enable: boolean) {
-    // TODO: fix me
+    // TODO: implement
   }
 
   onNextItem(callback: () => void) {

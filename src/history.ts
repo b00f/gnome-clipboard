@@ -1,8 +1,5 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-
-import * as ClipboardItem from 'clipboardItem';
-import * as Settings from 'settings';
+import * as ClipboardItem from './clipboardItem.js';
+import * as Settings from './settings.js';
 
 export class History {
   private _history: Map<number, ClipboardItem.ClipboardItem>;

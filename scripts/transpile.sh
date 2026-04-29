@@ -1,34 +1,21 @@
 #!/bin/sh
 
-# Uncommetn this if you want to see the commands
-# set -ex
-
-pwd=$(pwd)
-
-# In goes standard JS. Out comes GJS-compatible JS
-transpile() {
-    cat ${src} | sed -e 's#export function#function#g' \
-        -e 's#export var#var#g' \
-        -e 's#export const#var#g' \
-        -e 's#Object.defineProperty(exports, "__esModule", { value: true });#var exports = {};#g' \
-        | sed -E 's/export class (\w+)/var \1 = class \1/g' \
-        | sed -E "s/import \* as (\w+) from '(\w+)'/const \1 = Me.imports.\2/g" > ${dest}
-}
+# Stop on error
+set -e
 
 rm -rf dist src/build
 mkdir -p dist/
 
-# Transpile to JavaScript
-tsc --p ./src &
+# Transpile TypeScript to modern ESM
+echo "Compiling TypeScript..."
+tsc --p ./src
 
-wait
+# Copy assets to dist
+echo "Copying assets..."
+cp -r README.md LICENSE metadata.json schemas src/*.css po dist/
 
-# Convert JS to GJS-compatible scripts
-cp -r README.md LICENSE metadata.json schemas src/*.css po dist &
+# Copy compiled JavaScript to dist
+echo "Copying compiled JS..."
+cp -r src/build/*.js dist/
 
-for src in $(find src/build -name '*.js'); do
-    dest=$(echo $src | sed s#src/build#dist#g)
-    transpile &
-done
-
-wait
+echo "Build complete."

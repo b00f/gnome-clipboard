@@ -1,11 +1,6 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-
-import * as log from 'log';
-
-const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
-
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import * as log from './log.js';
 
 export class Store {
   private _path: string = "";
@@ -29,7 +24,8 @@ export class Store {
       let file = Gio.file_new_for_path(this._path);
       let [success, contents] = file.load_contents(null);
       if (success && contents) {
-        history = JSON.parse(imports.byteArray.toString(contents));
+        const decoder = new TextDecoder();
+        history = JSON.parse(decoder.decode(contents));
       }
     } catch (err) {
       log.error(`an exception occurred: ${err}`);

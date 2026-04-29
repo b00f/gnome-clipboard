@@ -1,7 +1,4 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-
-import * as utils from 'utils';
+import * as utils from './utils.js';
 
 export class ClipboardItem {
     public text: string;

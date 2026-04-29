@@ -2,13 +2,16 @@
     "version": "1.0.0",
     "compileOnSave": true,
     "compilerOptions": {
-        "target": "es2015",
+        "target": "es2022",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "ignoreDeprecations": "6.0",
         "strict": true,
         "outDir": "build",
         "forceConsistentCasingInFileNames": true,
-        "downlevelIteration": true,
         "lib": [
-            "es2015"
+            "es2022",
+            "dom"
         ],
         "pretty": true,
         "removeComments": true,

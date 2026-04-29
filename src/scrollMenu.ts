@@ -1,16 +1,12 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-
-import * as log from 'log';
-
-const { St } = imports.gi;
-const PopupMenu = imports.ui.popupMenu;
-
-// Derived from PopupMenuSection
-// https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/popupMenu.js
+import St from 'gi://St';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as log from './log.js';
 
 export class ScrollMenu
   extends PopupMenu.PopupMenuSection {
+
+  public scrollView: St.ScrollView;
+  public scrollViewSection: PopupMenu.PopupMenuSection;
 
   constructor() {
     super();
@@ -21,11 +17,12 @@ export class ScrollMenu
       clip_to_allocation: true,
     });
 
-    // Scroll bar policy
     this.scrollView.set_policy(St.PolicyType.NEVER, St.PolicyType.AUTOMATIC);
     this.scrollViewSection = new PopupMenu.PopupMenuSection();
-    this.scrollView.add_actor(this.scrollViewSection.actor);
-    this.actor.add_actor(this.scrollView);
+    
+    // In ESM/GNOME 45+, many objects inherit from Clutter.Actor directly
+    this.scrollView.add_child(this.scrollViewSection.actor);
+    this.actor.add_child(this.scrollView);
   }
 
   filterItems(query: string) {
@@ -55,10 +52,6 @@ export class ScrollMenu
   }
 
   scrollToBottom() {
-    // TODO: Fix me
-    // let vAdjust = this.scrollView.vscroll.adjustment;
-    // vAdjust.value = vAdjust.upper - vAdjust.page_size;
-
-    // log.debug(`scroll ${vAdjust.value}`)
+    // TODO: Implement using new adjustment API if needed
   }
 };

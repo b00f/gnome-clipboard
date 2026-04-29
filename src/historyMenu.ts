@@ -1,11 +1,8 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import * as ScrollMenu from 'scrollMenu';
-import * as ClipboardItem from 'clipboardItem';
-import * as MenuItem from 'menuItem';
-
-const PopupMenu = imports.ui.popupMenu;
+import * as ScrollMenu from './scrollMenu.js';
+import * as ClipboardItem from './clipboardItem.js';
+import * as MenuItem from './menuItem.js';
 
 export class HistoryMenu
   extends ScrollMenu.ScrollMenu {

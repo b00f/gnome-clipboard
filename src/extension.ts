@@ -1,49 +1,35 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import * as ClipboardPanel from 'clipboardPanel';
-import * as log from 'log';
+import * as ClipboardPanel from './clipboardPanel.js';
+import * as log from './log.js';
 
-const Main = imports.ui.main;
-const ExtensionUtils = imports.misc.extensionUtils;
+export default class GnomeClipboardExtension extends Extension {
+    private _panel: ClipboardPanel.ClipboardPanel | null = null;
 
-const GETTEXT_DOMAIN = 'gnome-clipboard';
-const Gettext = imports.gettext.domain(GETTEXT_DOMAIN);
-export const _ = Gettext.gettext;
+    enable() {
+        log.info(`enabling...`);
+        
+        // Initialize logging with settings
+        log.init(this.getSettings());
 
-export class GnomeExtension {
-  _uuid: any;
-  _panel: any | null;
-
-  constructor(uuid: any) {
-    this._uuid = uuid;
-
-    ExtensionUtils.initTranslations(GETTEXT_DOMAIN);
-  }
-
-  enable() {
-    log.info(`enabling...`);
-
-    if (!this._panel) {
-      this._panel = new ClipboardPanel.ClipboardPanel();
-      Main.panel.addToStatusArea(this._uuid, this._panel);
+        if (!this._panel) {
+            this._panel = new ClipboardPanel.ClipboardPanel(
+                this.getSettings(),
+                this.gettext.bind(this),
+                this.uuid,
+                () => this.openPreferences()
+            );
+            Main.panel.addToStatusArea(this.uuid, this._panel);
+        }
     }
-  }
 
-  disable() {
-    log.info(`disabling...`);
+    disable() {
+        log.info(`disabling...`);
 
-    if (this._panel) {
-      this._panel.destroy();
-      this._panel = null;
+        if (this._panel) {
+            this._panel.destroy();
+            this._panel = null;
+        }
     }
-  }
 }
-
-// @ts-ignore
-function init(meta) {
-  log.info(`initializing Gnome Clipboard version ${Me.metadata.version} ...`);
-
-  return new GnomeExtension(meta.uuid);
-}
-

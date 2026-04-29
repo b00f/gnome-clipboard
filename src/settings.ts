@@ -1,17 +1,3 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-
-interface Settings extends GObject.Object {
-    get_boolean(key: string): boolean;
-    set_boolean(key: string, value: boolean): void;
-
-    get_uint(key: string): number;
-    set_uint(key: string, value: number): void;
-
-    get_string(key: string): string;
-    set_string(key: string, value: string): void;
-
-    bind(key: string, object: GObject.Object, property: string, flags: any): void
-}
 
 export const SCHEMA_ID = 'org.gnome.shell.extensions.gnome-clipboard';
 
@@ -28,11 +14,14 @@ export const HISTORY_SORT_RECENT_USAGE = 1;
 export const HISTORY_SORT_MOST_USAGE = 2;
 
 export class ExtensionSettings {
-    private _settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
+    private _settings: Gio.Settings;
+
+    constructor(settings: Gio.Settings) {
+        this._settings = settings;
+    }
 
     onChanged(callback: () => void) {
-        this._settings.connect('changed',
-            callback); //get notified on every schema change
+        this._settings.connect('changed', callback);
     }
 
     historySize(): number {
@@ -57,5 +46,9 @@ export class ExtensionSettings {
 
     showNotifications(): boolean {
         return this._settings.get_boolean(SHOW_NOTIFICATIONS);
+    }
+
+    getSettings(): Gio.Settings {
+        return this._settings;
     }
 }

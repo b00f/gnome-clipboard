@@ -1,8 +1,17 @@
-const { St, GObject } = imports.gi;
-const PopupMenu = imports.ui.popupMenu
+import St from 'gi://St';
+import GObject from 'gi://GObject';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
+let _ = (s: string) => s;
+
+export function init(gettextFunc: (s: string) => string) {
+    _ = gettextFunc;
+}
 
 export class SearchBox
   extends PopupMenu.PopupBaseMenuItem {
+
+  public searchEntry: St.Entry;
 
   static {
     GObject.registerClass(this);
@@ -14,10 +23,6 @@ export class SearchBox
       can_focus: true,
     })
 
-    // TODO: add 'x' clear button inside the search box
-    // --------------------------------------------------
-    // |                                              X |
-    // --------------------------------------------------
     this.searchEntry = new St.Entry({
       style_class: 'search-box',
       can_focus: true,
@@ -27,8 +32,7 @@ export class SearchBox
 
     this.searchEntry.set_x_expand(true);
 
-    this.actor.add_child(this.searchEntry);
-
+    this.add_child(this.searchEntry);
   }
 
   onTextChanged(callback: any) {

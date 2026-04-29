@@ -1,16 +1,14 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+import St from 'gi://St';
+import GObject from 'gi://GObject';
+import Clutter from 'gi://Clutter';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import * as ClipboardItem from 'clipboardItem';
-
-const St = imports.gi.St;
-const PopupMenu = imports.ui.popupMenu;
-const GObject = imports.gi.GObject;
-const Clutter = imports.gi.Clutter;
-
+import * as ClipboardItem from './clipboardItem.js';
 
 export class MenuItem
   extends PopupMenu.PopupBaseMenuItem {
+
+  public cbInfo: ClipboardItem.ClipboardItem;
 
   static {
     GObject.registerClass(this);
@@ -69,7 +67,7 @@ export class MenuItem
     pinBtn.set_x_expand(true);
     pinBtn.set_y_expand(true);
 
-    this.actor.add_child(pinBtn);
+    this.add_child(pinBtn);
     pinBtn.connect('button-press-event',
       () => {
         onPin(this);
@@ -91,7 +89,7 @@ export class MenuItem
     removeBtn.set_x_expand(false);
     removeBtn.set_y_expand(true);
 
-    this.actor.add_child(removeBtn);
+    this.add_child(removeBtn);
     removeBtn.connect('button-press-event',
       () => {
         onRemove(this);
