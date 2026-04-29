@@ -113,6 +113,10 @@ export class ClipboardPanel
       }
     });
 
+    this._actionBar.onPin(() => {
+      this._onPinCurrentItem();
+    });
+
     this._actionBar.onNextItem(() => {
       this._selectNextItem();
     });
@@ -154,6 +158,13 @@ export class ClipboardPanel
       this._rebuildMenu();
       return GLib.SOURCE_REMOVE;
     });
+  }
+
+  private _onPinCurrentItem() {
+    let item = this._history.get(this._selectedID);
+    if (item) {
+      this._onPinItem(item);
+    }
   }
 
   private _onActivateItem(item: ClipboardItem.ClipboardItem) {

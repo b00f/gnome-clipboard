@@ -13,6 +13,7 @@ export class ActionBar
   extends PopupMenu.PopupBaseMenuItem {
 
   private _enableBtn: any;
+  private _pinBtn: any;
   private _clearBtn: any;
   private _settingsBtn: any;
   private _prevBtn: any;
@@ -51,8 +52,19 @@ export class ActionBar
       activate: false,
     });
     actionsBox.add_child(spacer);
+    
+    // 'Pin' button
+    this._pinBtn = new PopupMenu.PopupBaseMenuItem({
+      style_class: 'action-bar-btn'
+    });
 
-    // 'Clear' button
+    let pinIcon = new St.Icon({
+      icon_name: "view-pin-symbolic",
+      style_class: 'popup-menu-icon',
+    });
+
+    this._pinBtn.add_child(pinIcon);
+    actionsBox.add_child(this._pinBtn);
     this._clearBtn = new PopupMenu.PopupBaseMenuItem({
       style_class: 'action-bar-btn'
     });
@@ -126,6 +138,12 @@ export class ActionBar
 
   onClearHistory(callback: () => void) {
     this._clearBtn.connect('activate', (_obj: any) => {
+      callback();
+    });
+  }
+
+  onPin(callback: () => void) {
+    this._pinBtn.connect('activate', (_obj: any) => {
       callback();
     });
   }

@@ -25,3 +25,11 @@
 .gnome-clipboard .pin-icon {
     width: 20px;
 }
+
+.gnome-clipboard .pinned {
+    color: #f5c211;
+}
+
+.gnome-clipboard .unpinned {
+    opacity: 0.3;
+}

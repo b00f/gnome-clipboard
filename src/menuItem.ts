@@ -32,29 +32,18 @@ export class MenuItem
 
     // pin button
     let pinIcon = new St.Icon({
-      icon_name: "",
+      icon_name: "view-pin-symbolic",
       reactive: true,
       track_hover: true,
       style_class: "popup-menu-icon pin-icon",
     });
 
     if (this.cbInfo.pinned) {
-      pinIcon.icon_name = "view-pin-symbolic";
+      pinIcon.add_style_class_name("pinned");
     } else {
-      pinIcon.icon_name = "";
+      pinIcon.add_style_class_name("unpinned");
     }
 
-    pinIcon.connect("enter-event", (self: any) => {
-      self.icon_name = "view-pin-symbolic";
-    });
-
-    pinIcon.connect("leave-event", (self: any) => {
-      if (this.cbInfo.pinned) {
-        self.icon_name = "view-pin-symbolic";
-      } else {
-        self.icon_name = "";
-      }
-    });
 
     let pinBtn = new St.Button({
       style_class: 'action-btn',
