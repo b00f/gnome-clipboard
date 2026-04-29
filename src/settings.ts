@@ -7,6 +7,9 @@ export const CLIPBOARD_TIMER = "clipboard-timer";
 export const TIMER_INTERVAL = "timer-interval";
 export const SAVE_PINNED = "save-pinned";
 export const SHOW_NOTIFICATIONS = "show-notifications";
+export const PRIVATE_MODE = "private-mode";
+export const BLACKLIST = "blacklist";
+export const SHORTCUT_MENU = "shortcut-menu";
 
 
 export const HISTORY_SORT_COPY_TIME = 0;
@@ -46,6 +49,22 @@ export class ExtensionSettings {
 
     showNotifications(): boolean {
         return this._settings.get_boolean(SHOW_NOTIFICATIONS);
+    }
+
+    privateMode(): boolean {
+        return this._settings.get_boolean(PRIVATE_MODE);
+    }
+
+    setPrivateMode(value: boolean) {
+        this._settings.set_boolean(PRIVATE_MODE, value);
+    }
+
+    blacklist(): string[] {
+        return this._settings.get_strv(BLACKLIST);
+    }
+
+    shortcutMenu(): string[] {
+        return this._settings.get_strv(SHORTCUT_MENU);
     }
 
     getSettings(): Gio.Settings {

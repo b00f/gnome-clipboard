@@ -44,6 +44,13 @@ export function hashCode(text: string): number {
   return hash;
 }
 
+export function hashBytes(bytes: any): number {
+  if (!bytes) return 0;
+  // Use GLib to compute a checksum
+  let checksum = GLib.compute_checksum_for_data(GLib.ChecksumType.MD5, bytes.get_data());
+  return hashCode(checksum);
+}
+
 export function truncate(text: string, length: number): string {
   text = text.trim();
   text = text.replace(/\s+/g, ' ');

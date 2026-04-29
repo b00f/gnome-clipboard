@@ -20,17 +20,37 @@ export class SearchBox
   constructor() {
     super({
       reactive: false,
-      can_focus: true,
+      can_focus: false,
+      style_class: 'search-box-container'
     })
 
     this.searchEntry = new St.Entry({
       style_class: 'search-box',
       can_focus: true,
-      hint_text: _('Type here to search...'),
-      track_hover: true
+      hint_text: _('Search clipboard...'),
+      track_hover: true,
+      x_expand: true,
     });
 
-    this.searchEntry.set_x_expand(true);
+    // Add search icon
+    let searchIcon = new St.Icon({
+        icon_name: 'edit-find-symbolic',
+        style_class: 'search-box-icon',
+        icon_size: 16,
+    });
+    this.searchEntry.set_primary_icon(searchIcon);
+
+    // Clear button
+    let clearIcon = new St.Icon({
+        icon_name: 'edit-clear-symbolic',
+        style_class: 'search-box-icon',
+        icon_size: 16,
+    });
+    
+    this.searchEntry.set_secondary_icon(clearIcon);
+    this.searchEntry.connect('secondary-icon-clicked', () => {
+        this.searchEntry.set_text('');
+    });
 
     this.add_child(this.searchEntry);
   }

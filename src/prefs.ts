@@ -7,7 +7,7 @@ import * as Settings from './settings.js';
 
 export default class GnomeClipboardPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window: Adw.PreferencesWindow) {
-        const settings = this.getSettings();
+        const settings = this.getSettings(Settings.SCHEMA_ID);
 
         const page = new Adw.PreferencesPage();
         window.add(page);
@@ -130,5 +130,40 @@ export default class GnomeClipboardPreferences extends ExtensionPreferences {
         );
         notificationsRow.add_suffix(notificationsSwitch);
         group.add(notificationsRow);
+
+        // Privacy Group
+        const privacyGroup = new Adw.PreferencesGroup({
+            title: this.gettext('Privacy'),
+        });
+        page.add(privacyGroup);
+
+        // Blacklist
+        const blacklistRow = new Adw.EntryRow({
+            title: this.gettext('Blacklisted App IDs'),
+        });
+        
+        const blacklistSettings = settings.get_strv(Settings.BLACKLIST).join(', ');
+        blacklistRow.set_text(blacklistSettings);
+        blacklistRow.connect('changed', () => {
+            const list = blacklistRow.get_text().split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+            settings.set_strv(Settings.BLACKLIST, list);
+        });
+        privacyGroup.add(blacklistRow);
+
+        // Shortcut
+        const shortcutRow = new Adw.EntryRow({
+            title: this.gettext('Keyboard Shortcut (e.g. <Super>v)'),
+        });
+        const shortcutSettings = settings.get_strv(Settings.SHORTCUT_MENU);
+        shortcutRow.set_text(shortcutSettings.length > 0 ? shortcutSettings[0] : '');
+        shortcutRow.connect('changed', () => {
+            const text = shortcutRow.get_text().trim();
+            if (text.length > 0) {
+                settings.set_strv(Settings.SHORTCUT_MENU, [text]);
+            } else {
+                settings.set_strv(Settings.SHORTCUT_MENU, []);
+            }
+        });
+        privacyGroup.add(shortcutRow);
     }
 }

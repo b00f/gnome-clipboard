@@ -1,8 +1,16 @@
+import St from 'gi://St';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import Clutter from 'gi://Clutter';
 
 import * as ScrollMenu from './scrollMenu.js';
 import * as ClipboardItem from './clipboardItem.js';
 import * as MenuItem from './menuItem.js';
+
+let _ = (s: string) => s;
+
+export function init(gettextFunc: (s: string) => string) {
+    _ = gettextFunc;
+}
 
 export class HistoryMenu
   extends ScrollMenu.ScrollMenu {
@@ -33,30 +41,93 @@ export class HistoryMenu
     this._nextItem = null;
     this._prevItem = null;
 
-    history.forEach((info, index, arr) => {
-      let item = new MenuItem.MenuItem(info,
-        this.onActivateItem.bind(this),
-        this.onPinItem.bind(this),
-        this.onRemoveItem.bind(this),
-      );
+    if (history.length === 0) {
+        this._showEmptyState();
+        return;
+    }
 
-      if (info.id() == selectedID) {
-        item.setOrnament(PopupMenu.Ornament.CHECK);
+    const pinned = history.filter(h => h.pinned);
+    const recent = history.filter(h => !h.pinned);
 
-        if (index - 1 > 0) {
-          this._nextItem = arr[index - 1];
-        }
+    if (pinned.length > 0) {
+      this._addHeader(_("Pinned"));
+      pinned.forEach((info) => {
+        this._addItem(info, selectedID, history);
+      });
+      super.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+    }
 
-        if (index + 1 < arr.length) {
-          this._prevItem = arr[index + 1];
-        }
+    if (recent.length > 0) {
+      this._addHeader(_("Recent History"));
+      recent.forEach((info) => {
+        this._addItem(info, selectedID, history);
+      });
+    }
+  }
 
-        // Scroll to the selected item
-        super.scrollToBottom()
+  private _addHeader(title: string) {
+      let header = new PopupMenu.PopupBaseMenuItem({
+          reactive: false,
+          activate: false,
+          style_class: 'section-header'
+      });
+      header.add_child(new St.Label({ text: title, style_class: 'section-header-label' }));
+      super.addMenuItem(header);
+  }
+
+  private _addItem(info: ClipboardItem.ClipboardItem, selectedID: number, history: Array<ClipboardItem.ClipboardItem>) {
+    let item = new MenuItem.MenuItem(info,
+      this.onActivateItem.bind(this),
+      this.onPinItem.bind(this),
+      this.onRemoveItem.bind(this),
+    );
+
+    if (info.id() == selectedID) {
+      (item as any).add_style_class_name('selected');
+      
+      let index = history.findIndex(h => h.id() === info.id());
+      if (index - 1 >= 0) {
+        this._nextItem = history[index - 1];
+      }
+      if (index + 1 < history.length) {
+        this._prevItem = history[index + 1];
       }
 
-      super.addMenuItem(item);
-    });
+      super.scrollToBottom();
+    }
+
+    super.addMenuItem(item);
+  }
+
+  private _showEmptyState() {
+      let box = new St.BoxLayout({
+          vertical: true,
+          x_expand: true,
+          y_expand: true,
+          style_class: 'empty-state',
+          x_align: Clutter.ActorAlign.CENTER,
+          y_align: Clutter.ActorAlign.CENTER
+      });
+
+      let icon = new St.Icon({
+          icon_name: 'edit-copy-symbolic',
+          style_class: 'empty-state-icon'
+      });
+      box.add_child(icon);
+
+      let label = new St.Label({
+          text: _("Clipboard is empty"),
+          style_class: 'empty-state-label'
+      });
+      box.add_child(label);
+
+      let container = new PopupMenu.PopupBaseMenuItem({
+          reactive: false,
+          activate: false,
+          hover: false
+      });
+      container.add_child(box);
+      super.addMenuItem(container);
   }
 
   public nextItem() {
@@ -80,7 +151,6 @@ export class HistoryMenu
   }
 
   private onRemoveItem(item: MenuItem.MenuItem) {
-    item.destroy();
     this._onRemoveItem(item.cbInfo);
   }
 

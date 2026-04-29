@@ -1,75 +1,82 @@
+# ==============================================================================
+# GNOME Clipboard Makefile
+# ------------------------------------------------------------------------------
+# Professional Makefile to build, pack, and manage the GNOME extension.
+# ==============================================================================
+
 EXT_NAME = gnome-clipboard
 UUID = $(EXT_NAME)@b00f.github.io
 BUNDLE = $(UUID).shell-extension.zip
 POT_FILE = ./po/$(EXT_NAME).pot
-SOURCES = src/*.ts src/*.css
+
+# Directories
+SRC_DIR = src
+DIST_DIR = dist
+BUILD_DIR = $(SRC_DIR)/build
+
+# Assets
+ASSETS = README.md LICENSE metadata.json
+ASSET_DIRS = schemas po
+STYLES = $(wildcard $(SRC_DIR)/*.css)
+TS_SOURCES = $(wildcard $(SRC_DIR)/*.ts)
+
+# Colors for output
+GREEN = \033[0;32m
+NC = \033[0m # No Color
+
+# Tools
+# Use system tsc if available, otherwise fallback to npx (no node_modules required)
+TSC := $(shell command -v tsc 2> /dev/null || echo "npx -p typescript tsc")
+
+.PHONY: all compile pack install enable disable clean update-translations listen test
 
 all: depcheck pack
 
-compile:
-	@sh scripts/transpile.sh
-
 depcheck:
-	@echo depcheck
-	@if ! command -v tsc >/dev/null; then \
-		echo \
-		echo 'You must install TypeScript to transpile'; \
+	@if ! command -v tsc >/dev/null && ! command -v npx >/dev/null; then \
+		echo "Error: Neither 'tsc' nor 'npx' found. Please install TypeScript."; \
 		exit 1; \
 	fi
 
-pack: compile
-	@gnome-extensions pack --force --gettext-domain=$(EXT_NAME) dist \
-		--extra-source=clipboardItem.js \
-		--extra-source=clipboardPanel.js \
-		--extra-source=prefs.js \
-		--extra-source=scrollMenu.js \
-		--extra-source=history.js \
-		--extra-source=historyMenu.js \
-		--extra-source=confirmDialog.js \
-		--extra-source=menuItem.js \
-		--extra-source=store.js \
-		--extra-source=searchBox.js \
-		--extra-source=actionBar.js \
-		--extra-source=settings.js \
-		--extra-source=log.js \
-		--extra-source=utils.js \
-		--extra-source=README.md \
-		--extra-source=LICENSE
+clean:
+	@echo "Cleaning artifacts..."
+	@rm -rf $(DIST_DIR) $(BUILD_DIR) $(BUNDLE)
 
-	@echo extension packed!
+compile: depcheck
+	@bash scripts/transpile.sh
+
+pack: compile
+	@echo "$(GREEN)Packing extension...$(NC)"
+	@cd $(DIST_DIR) && gnome-extensions pack --force --gettext-domain=$(EXT_NAME) $$(find . -maxdepth 1 -name "*.js" ! -name "extension.js" ! -name "prefs.js" -printf "--extra-source=%f ") . && mv $(BUNDLE) ..
+	@echo "$(GREEN)Extension packed: $(BUNDLE)$(NC)"
 
 install: pack
 	@gnome-extensions install $(BUNDLE) --force
-	@echo extension installed!
+	@echo "$(GREEN)Extension installed!$(NC)"
 
 enable:
 	@gnome-extensions enable $(UUID)
-	@echo extension enabled!
+	@echo "$(GREEN)Extension enabled!$(NC)"
 
 disable:
 	@gnome-extensions disable $(UUID)
-	@echo extension disbled!
+	@echo "$(GREEN)Extension disabled!$(NC)"
 
-update-transaltions:
-	@xgettext -L JavaScript --no-wrap --no-location --sort-output --from-code=UTF-8 -k_ -kN_ -o $(POT_FILE) dist/*.js --package-name $(EXT_NAME)
+update-translations:
+	@xgettext -L JavaScript --no-wrap --no-location --sort-output --from-code=UTF-8 -k_ -kN_ -o $(POT_FILE) $(DIST_DIR)/*.js --package-name $(EXT_NAME)
 	@for f in ./po/*.po ; do \
 		msgmerge --no-location -N $$f $(POT_FILE) -o $$f ;\
 	done
 
-test_wayland: install
-	# https://wiki.gnome.org/Attic/GnomeShell/Extensions/Writing#Extension_Creation
-	@dbus-run-session -- gnome-shell --nested --wayland
+listen:
+	journalctl -o cat -n 0 -f "$$(which gnome-shell)" | grep -v warning
 
-test: depcheck compile install enable restart-shell
+test: install enable restart-shell
 
 restart-shell:
-	echo "Restart shell!"
-	if bash -c 'xprop -root &> /dev/null'; then \
+	@echo "Restarting shell..."
+	@if bash -c 'xprop -root &> /dev/null'; then \
 		pkill -HUP gnome-shell; \
 	else \
 		gnome-session-quit --logout; \
 	fi
-	sleep 3
-
-listen:
-	journalctl -o cat -n 0 -f "$$(which gnome-shell)" | grep -v warning

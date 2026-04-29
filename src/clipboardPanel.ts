@@ -3,6 +3,7 @@ import GObject from 'gi://GObject';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import Clutter from 'gi://Clutter';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -75,6 +76,7 @@ export class ClipboardPanel
 
     this._actionBar = new ActionBar.ActionBar();
     ActionBar.init(_);
+    HistoryMenu.init(_);
     SearchBox.init(_);
     ConfirmDialog.init(_);
 
@@ -117,6 +119,11 @@ export class ClipboardPanel
       this._onPinCurrentItem();
     });
 
+    this._actionBar.onTogglePrivateMode(() => {
+      let current = this._settings.privateMode();
+      this._settings.setPrivateMode(!current);
+    });
+
     this._actionBar.onNextItem(() => {
       this._selectNextItem();
     });
@@ -131,17 +138,10 @@ export class ClipboardPanel
   private _setupMenu() {
     this.menu.box.add_style_class_name('gnome-clipboard');
 
-    this._searchBox = new SearchBox.SearchBox();
     this.menu.addMenuItem(this._searchBox);
-
-    let separator1 = new PopupMenu.PopupSeparatorMenuItem();
-    this.menu.addMenuItem(separator1);
-
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     this.menu.addMenuItem(this._historyMenu);
-
-    let separator2 = new PopupMenu.PopupSeparatorMenuItem();
-    this.menu.addMenuItem(separator2);
-
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     this.menu.addMenuItem(this._actionBar);
   }
 
@@ -171,12 +171,13 @@ export class ClipboardPanel
     log.debug(`update clipboard: ${item.display()} usage: ${item.usage}`);
 
     this._copyToClipboard(item);
-    this._toggle();
+    this.toggle();
   }
   
   private _onSettingsChanged() {
     log.info("settings changed");
 
+    this._actionBar.setPrivateMode(this._settings.privateMode());
     this._setupListener();
     this._rebuildMenu();
     this._saveHistory();
@@ -218,12 +219,15 @@ export class ClipboardPanel
   }
 
   private _addToHistory(text: string, usage = 1, pinned = false,
-    copiedAt = Date.now(), usedAt = Date.now()) {
-    let id = utils.hashCode(text);
+    copiedAt = Date.now(), usedAt = Date.now(), 
+    type: ClipboardItem.ClipboardItemType = ClipboardItem.ClipboardItemType.TEXT,
+    imagePath: string | null = null) {
+    
+    let id = type === ClipboardItem.ClipboardItemType.IMAGE ? utils.hashCode(imagePath || "") : utils.hashCode(text);
     let item = this._history.get(id);
     if (item === undefined) {
       item = new ClipboardItem.ClipboardItem(
-        text, usage, pinned, copiedAt, usedAt
+        text, usage, pinned, copiedAt, usedAt, type, imagePath
       );
 
       this._history.set(item);
@@ -269,27 +273,67 @@ export class ClipboardPanel
   }
 
   private _checkClipboard() {
-    if (!this._actionBar.enable()) {
+    if (!this._actionBar.enable() || this._settings.privateMode()) {
       return;
     }
 
-    this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
-      log.info(`set clipboard content: ${text}`);
+    let tracker = Shell.WindowTracker.get_default();
+    let app = tracker.focus_app;
+    if (app) {
+        let appId = app.get_id();
+        let blacklist = this._settings.blacklist();
+        if (appId && blacklist.includes(appId)) {
+            log.info(`skipping blacklisted app: ${appId}`);
+            return;
+        }
+    }
 
-      if (this.addClipboard(text)) {
-        this._rebuildMenu();
-        this._saveHistory();
+    this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
+      if (text && text.length > 0) {
+        log.info(`set clipboard text content: ${text}`);
+        if (this.addClipboard(text)) {
+          this._rebuildMenu();
+          this._saveHistory();
+        }
+      } else {
+        // Try image
+        this._clipboard.get_content(St.ClipboardType.CLIPBOARD, 'image/png', (_clipboard: any, bytes: any) => {
+          if (bytes) {
+            let id = utils.hashBytes(bytes);
+            if (id == this._selectedID) return;
+            
+            log.info("set clipboard image content");
+            let path = this.store.saveImage(id, bytes);
+            if (path) {
+              this._selectedID = id;
+              this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
+              this._rebuildMenu();
+              this._saveHistory();
+            }
+          }
+        });
       }
     });
   }
 
   private _copyToClipboard(item: ClipboardItem.ClipboardItem) {
-    this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.text);
+    if (item.type === ClipboardItem.ClipboardItemType.IMAGE && item.imagePath) {
+        let file = Gio.file_new_for_path(item.imagePath);
+        let [success, contents] = file.load_contents(null);
+        if (success) {
+            // St.Clipboard.set_content expects GLib.Bytes in modern GNOME
+            let bytes = GLib.Bytes.new(contents);
+            this._clipboard.set_content(St.ClipboardType.CLIPBOARD, 'image/png', bytes);
+        }
+    } else {
+        this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.text);
+    }
+    
     this._selectedID = item.id();
     this._rebuildMenu();
 
     if (this._settings.showNotifications()) {
-      Main.notify(_("Clipboard updated"), item.text);
+      Main.notify(_("Clipboard updated"), item.display());
     }
   }
 
@@ -330,6 +374,8 @@ export class ClipboardPanel
         value.pinned,
         value.copiedAt,
         value.usedAt,
+        value.type || ClipboardItem.ClipboardItemType.TEXT,
+        value.imagePath || null
       );
     });
 
@@ -341,7 +387,7 @@ export class ClipboardPanel
     this.store.save(items);
   }
 
-  private _toggle() {
+  public toggle() {
     this.menu.toggle();
   }
 
