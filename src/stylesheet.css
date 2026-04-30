@@ -1,125 +1,238 @@
 /* 
- * Gnome Clipboard - Optimized & Compact UI
- * Focused on Information Density and Usability
+ * Gnome Clipboard - Premium & Modern UI
+ * Inspired by Libadwaita and GNOME 45+ Design Principles
+ * GNOME Shell compatible: no CSS variables, no :root
  */
 
 .gnome-clipboard {
-    font-size: 10pt;
+    font-size: 10.5pt;
+    color: rgba(255, 255, 255, 0.95);
 }
 
-/* Scroll View */
+/* ─── Scroll View ─────────────────────────────────────────── */
 .gnome-clipboard .scroll-view {
-    height: 480px;
-    width: 360px;
+    height: 520px;
+    width: 400px;
     padding: 0;
+    margin: 4px 0;
 }
 
 .gnome-clipboard .scroll-view StScrollBar {
-    width: 5px;
-    padding: 0;
+    width: 8px;
+    padding: 2px;
 }
 
-/* Search Box */
+.gnome-clipboard .scroll-view StScrollBar StButton#vhandle {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    margin: 2px;
+}
+
+.gnome-clipboard .scroll-view StScrollBar StButton#vhandle:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── Search Box ──────────────────────────────────────────── */
 .gnome-clipboard .search-box-container {
-    padding: 8px 12px;
+    padding: 10px 12px 6px 12px;
 }
 
 .gnome-clipboard .search-box {
-    border-radius: 8px;
-    padding: 6px 10px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 12px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition-duration: 200ms;
 }
 
 .gnome-clipboard .search-box:focus {
     border-color: #3584e4;
-    background-color: rgba(255, 255, 255, 0.08);
-}
-
-/* Menu Items */
-.gnome-clipboard .clipboard-item {
-    margin: 1px 6px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    transition-duration: 150ms;
-    border: 1px solid transparent;
-}
-
-.gnome-clipboard .clipboard-item:hover {
-    background-color: rgba(255, 255, 255, 0.06);
-}
-
-.gnome-clipboard .clipboard-item.selected {
-    background-color: rgba(53, 132, 228, 0.12);
-    border: 1px solid rgba(53, 132, 228, 0.25);
-}
-
-.gnome-clipboard .clipboard-item-text {
-    font-weight: 450;
-}
-
-.gnome-clipboard .clipboard-item-meta {
-    font-size: 0.8em;
-    color: rgba(255, 255, 255, 0.4);
-    margin-top: 2px;
-}
-
-/* Action Buttons in Items */
-.gnome-clipboard .item-action-btn {
-    border-radius: 6px;
-    padding: 4px;
-    margin-left: 2px;
-}
-
-.gnome-clipboard .item-action-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 2px rgba(53, 132, 228, 0.15);
 }
 
-/* Image Previews - more compact */
-.gnome-clipboard .clipboard-image-preview {
-    margin: 4px 0;
-    border-radius: 6px;
-    icon-size: 48px;
+.gnome-clipboard .search-box-icon {
+    color: rgba(255, 255, 255, 0.4);
 }
 
-/* Section Headers - compact */
-.gnome-clipboard .section-header {
-    padding: 10px 14px 4px 14px;
-}
-
-.gnome-clipboard .section-header-label {
-    font-weight: 800;
-    font-size: 0.7em;
-    color: rgba(53, 132, 228, 0.8);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-}
-
-/* Action Bar - Tight */
+/* ─── Action Bar ──────────────────────────────────────────── */
 .gnome-clipboard .action-bar {
-    padding: 6px 10px;
-    background-color: rgba(255, 255, 255, 0.02);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.gnome-clipboard .action-bar-container {
+    spacing: 4px;
+}
+
+.gnome-clipboard .nav-group,
+.gnome-clipboard .action-group {
+    spacing: 2px;
+}
+
+/* ─── Action Buttons ──────────────────────────────────────── */
 .gnome-clipboard .action-btn {
     border-radius: 8px;
-    padding: 6px;
-    margin: 0 2px;
+    padding: 8px;
+    transition-duration: 200ms;
+    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .gnome-clipboard .action-btn:hover {
     background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Empty State */
+.gnome-clipboard .action-btn:active {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.gnome-clipboard .active-btn {
+    color: #3584e4;
+    background-color: rgba(53, 132, 228, 0.15);
+    border-color: rgba(53, 132, 228, 0.3);
+}
+
+.gnome-clipboard .action-btn-danger:hover {
+    background-color: rgba(246, 97, 81, 0.15);
+    color: #f66151;
+    border-color: rgba(246, 97, 81, 0.3);
+}
+
+/* ─── Service Switch ──────────────────────────────────────── */
+.gnome-clipboard .service-toggle-container {
+    padding-left: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    spacing: 6px;
+}
+
+.gnome-clipboard .service-label {
+    font-size: 0.8em;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.gnome-clipboard .service-switch {
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 0.75em;
+    font-weight: 700;
+    transition-duration: 200ms;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gnome-clipboard .service-switch:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.gnome-clipboard .active-switch {
+    background-color: rgba(53, 132, 228, 0.18);
+    color: #3584e4;
+    border-color: rgba(53, 132, 228, 0.35);
+}
+
+.gnome-clipboard .active-switch:hover {
+    background-color: rgba(53, 132, 228, 0.28);
+}
+
+/* ─── Clipboard Items ─────────────────────────────────────── */
+.gnome-clipboard .clipboard-item {
+    margin: 3px 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    transition-duration: 200ms;
+    border: 1px solid transparent;
+    background-color: transparent;
+}
+
+.gnome-clipboard .clipboard-item:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.09);
+}
+
+.gnome-clipboard .clipboard-item.selected {
+    background-color: rgba(53, 132, 228, 0.15);
+    border-color: rgba(53, 132, 228, 0.3);
+}
+
+.gnome-clipboard .clipboard-item-text {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.gnome-clipboard .clipboard-item-meta {
+    font-size: 0.78em;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ─── Item Action Buttons ─────────────────────────────────── */
+.gnome-clipboard .item-action-btn {
+    border-radius: 6px;
+    padding: 5px;
+    margin-left: 4px;
+    transition-duration: 150ms;
+    opacity: 0.0;
+}
+
+.gnome-clipboard .clipboard-item:hover .item-action-btn {
+    opacity: 0.6;
+}
+
+.gnome-clipboard .item-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 1.0;
+}
+
+.gnome-clipboard .item-action-btn.pinned {
+    color: #f5c211;
+    opacity: 1.0;
+}
+
+/* ─── Image Previews ──────────────────────────────────────── */
+.gnome-clipboard .clipboard-image-preview {
+    margin: 4px 0;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Section Headers ─────────────────────────────────────── */
+.gnome-clipboard .section-header {
+    padding: 14px 14px 6px 14px;
+}
+
+.gnome-clipboard .section-header-label {
+    font-weight: 800;
+    font-size: 0.72em;
+    color: #3584e4;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.85;
+}
+
+/* ─── Empty State ─────────────────────────────────────────── */
 .gnome-clipboard .empty-state {
-    padding: 40px 20px;
+    padding: 60px 20px;
+    spacing: 14px;
 }
 
 .gnome-clipboard .empty-state-icon {
-    width: 48px;
-    height: 48px;
-    opacity: 0.2;
+    width: 72px;
+    height: 72px;
+    opacity: 0.18;
+    color: #3584e4;
+}
+
+.gnome-clipboard .empty-state-label {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
 }

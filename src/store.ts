@@ -20,13 +20,15 @@ export class Store {
   }
 
   async load(): Promise<any> {
-    log.info(`try to load history.`);
+    log.info(`loading history async from ${this._path}`);
 
-    let history: any = [];
     try {
       let file = Gio.file_new_for_path(this._path);
+      if (!file.query_exists(null)) {
+          return [];
+      }
       
-      const [contents] = await new Promise<any>((resolve, reject) => {
+      const result = await new Promise<any>((resolve, reject) => {
         file.load_contents_async(null, (file: any, res: any) => {
             try {
                 resolve(file.load_contents_finish(res));
@@ -36,20 +38,51 @@ export class Store {
         });
       });
 
+      let contents = Array.isArray(result) ? result[0] : result;
+
       if (contents) {
-        const decoder = new TextDecoder();
-        history = JSON.parse(decoder.decode(contents));
+        let text = this._safeDecode(contents);
+        if (text && text.trim().length > 0) {
+            // Remove Byte Order Mark (BOM) if present
+            text = text.replace(/^\uFEFF/, '').trim();
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                log.error(`JSON parse failed, resetting: ${e}`);
+                return [];
+            }
+        }
       }
     } catch (err) {
-      log.error(`an exception occurred: ${err}`);
+      log.error(`load history failed: ${err}`);
     }
 
-    return history;
+    return [];
+  }
+
+  private _safeDecode(data: any): string {
+      if (!data) return "";
+      try {
+          // Robust wrapper for GJS binary data
+          const ui8 = (data instanceof Uint8Array) ? data : new Uint8Array(data);
+          return new TextDecoder().decode(ui8);
+      } catch (e) {
+          log.warn(`TextDecoder failed, using byte fallback: ${e}`);
+          let text = "";
+          let bytes = data;
+          if (data && typeof data.get_data === 'function') {
+              bytes = data.get_data();
+          }
+          if (bytes && bytes.length) {
+              for (let i = 0; i < bytes.length; i++) {
+                  text += String.fromCharCode(bytes[i]);
+              }
+          }
+          return text;
+      }
   }
 
   async save(history: any) {
-    log.info(`try to save history.`);
-
     try {
       let json = JSON.stringify(history);
       let file = Gio.file_new_for_path(this._path);
@@ -66,7 +99,7 @@ export class Store {
         });
       });
     } catch (err) {
-      log.error(`an exception occurred: ${err}`);
+      log.error(`save history failed: ${err}`);
     }
   }
 

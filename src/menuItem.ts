@@ -12,6 +12,8 @@ export class MenuItem
   public cbInfo: ClipboardItem.ClipboardItem;
   private static _iconCache: Map<string, any> = new Map();
   private _timeLabel: any;
+  private _contentLabel: any;
+  private _contentIcon: any;
   private _pinBtn: any;
 
   static {
@@ -30,21 +32,18 @@ export class MenuItem
 
     this.cbInfo = cbInfo;
 
-    let mainBox = new St.BoxLayout({
+    // Main horizontal row
+    let row = new St.BoxLayout({
+        vertical: false,
+        x_expand: true,
+        y_align: Clutter.ActorAlign.CENTER,
+    });
+
+    // Left: content + meta (stacked vertically, expands)
+    let bodyBox = new St.BoxLayout({
         vertical: true,
         x_expand: true,
-    });
-
-    let headerBox = new St.BoxLayout({
-        vertical: false,
-        x_expand: true,
-    });
-
-    // Content Box (Text or Image)
-    let contentBox = new St.BoxLayout({
-        vertical: false,
-        x_expand: true,
-        y_align: Clutter.ActorAlign.CENTER
+        y_align: Clutter.ActorAlign.CENTER,
     });
 
     if (cbInfo.type === ClipboardItem.ClipboardItemType.IMAGE && cbInfo.imagePath) {
@@ -54,62 +53,45 @@ export class MenuItem
           gicon = Gio.Icon.new_for_string(file.get_path());
           MenuItem._iconCache.set(cbInfo.imagePath, gicon);
       }
-      
-      let icon = new St.Icon({
+      this._contentIcon = new St.Icon({
         gicon: gicon,
         icon_size: 48,
-        style_class: 'clipboard-image-preview'
+        style_class: 'clipboard-image-preview',
       });
-      contentBox.add_child(icon);
+      bodyBox.add_child(this._contentIcon);
     } else {
-      let label = new St.Label({ 
+      this._contentLabel = new St.Label({
           text: cbInfo.display(),
-          style_class: 'clipboard-item-text'
+          style_class: 'clipboard-item-text',
       });
-      contentBox.add_child(label);
+      this._contentLabel.clutter_text.line_wrap = true;
+      bodyBox.add_child(this._contentLabel);
     }
-    headerBox.add_child(contentBox);
 
-    // Meta Box (Time + Pins)
-    let metaBox = new St.BoxLayout({
-        vertical: true,
-        x_align: Clutter.ActorAlign.END,
-        y_align: Clutter.ActorAlign.CENTER
-    });
-
-    // Relative Time
     this._timeLabel = new St.Label({
         text: this._formatRelativeTime(cbInfo.copiedAt),
-        style_class: 'clipboard-item-meta'
+        style_class: 'clipboard-item-meta',
     });
-    metaBox.add_child(this._timeLabel);
+    bodyBox.add_child(this._timeLabel);
+    row.add_child(bodyBox);
 
-    headerBox.add_child(metaBox);
-    mainBox.add_child(headerBox);
-
-    this.add_child(mainBox);
-
-    // Pin & Remove buttons (shown on hover/selection in some designs, or always)
-    // For now, let's group them in an action container
-    let actionContainer = new St.BoxLayout({
+    // Right: action buttons (pin + remove)
+    let actionBox = new St.BoxLayout({
         vertical: false,
-        x_align: Clutter.ActorAlign.END
+        x_align: Clutter.ActorAlign.END,
+        y_align: Clutter.ActorAlign.CENTER,
     });
 
-    // Pin Button
-    this._pinBtn = this._createActionBtn(
-        cbInfo.pinned ? "view-pin-symbolic" : "view-pin-symbolic", 
-        cbInfo.pinned ? "pinned" : "unpinned"
-    );
-    actionContainer.add_child(this._pinBtn);
+    this._pinBtn = this._createActionBtn('view-pin-symbolic', cbInfo.pinned ? 'pinned' : 'unpinned');
     this._pinBtn.connect('clicked', () => onPin(this));
+    actionBox.add_child(this._pinBtn);
 
-    // Remove Button
-    let removeBtn = this._createActionBtn("edit-delete-symbolic", "remove-icon");
-    actionContainer.add_child(removeBtn);
+    let removeBtn = this._createActionBtn('edit-delete-symbolic', 'remove-icon');
     removeBtn.connect('clicked', () => onRemove(this));
+    actionBox.add_child(removeBtn);
 
-    this.add_child(actionContainer);
+    row.add_child(actionBox);
+    this.add_child(row);
 
     this.connect('activate', () => {
       onActivate(this);
@@ -118,8 +100,18 @@ export class MenuItem
 
   public updateUI() {
     this._timeLabel.set_text(this._formatRelativeTime(this.cbInfo.copiedAt));
-    
-    // Update pin status
+
+    if (this._contentLabel) {
+        this._contentLabel.set_text(this.cbInfo.display());
+    }
+
+    if (this._contentIcon && this.cbInfo.type === ClipboardItem.ClipboardItemType.IMAGE && this.cbInfo.imagePath) {
+        let gicon = MenuItem._iconCache.get(this.cbInfo.imagePath);
+        if (gicon) {
+            this._contentIcon.set_gicon(gicon);
+        }
+    }
+
     this._pinBtn.remove_style_class_name('pinned');
     this._pinBtn.remove_style_class_name('unpinned');
     this._pinBtn.add_style_class_name(this.cbInfo.pinned ? 'pinned' : 'unpinned');
@@ -131,19 +123,19 @@ export class MenuItem
           child: new St.Icon({
               icon_name: iconName,
               icon_size: 14,
-              style_class: 'popup-menu-icon'
+              style_class: 'popup-menu-icon',
           }),
           can_focus: true,
-          track_hover: true
+          track_hover: true,
       });
   }
 
   private _formatRelativeTime(timestamp: number): string {
       let diff = (Date.now() - timestamp) / 1000;
-      if (diff < 60) return "Just now";
-      if (diff < 3600) return Math.floor(diff / 60) + "m ago";
-      if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
-      return Math.floor(diff / 86400) + "d ago";
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
   }
 
   text(): string {
