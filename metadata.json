@@ -7,11 +7,11 @@
     "49",
     "50"
   ],
-  "version": 68,
+  "version": 69,
   "gettext-domain" : "gnome-clipboard",
   "settings-schema": "org.gnome.shell.extensions.gnome-clipboard",
   "uuid": "gnome-clipboard@b00f.github.io",
   "name": "Gnome Clipboard",
-  "description": "A gnome shell extension to manage your clipboard.",
+  "description": "[Accesses Clipboard] A gnome shell extension to manage and keep track of your clipboard history. This extension monitors the system clipboard to provide history management and pinning features.",
   "url": "https://github.com/b00f/gnome-clipboard"
 }

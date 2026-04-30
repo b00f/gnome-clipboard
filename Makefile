@@ -28,9 +28,11 @@ NC = \033[0m # No Color
 # Use system tsc if available, otherwise fallback to npx (no node_modules required)
 TSC := $(shell command -v tsc 2> /dev/null || echo "npx -p typescript tsc")
 
-.PHONY: all compile pack install enable disable clean update-translations listen test
+.PHONY: all build compile pack install enable disable clean update-translations listen test
+ 
+all: build
 
-all: depcheck pack
+build: pack
 
 depcheck:
 	@if ! command -v tsc >/dev/null && ! command -v npx >/dev/null; then \

@@ -2,6 +2,7 @@ import GLib from 'gi://GLib';
 // In GNOME 45+, imports.byteArray is deprecated. Use standard JS methods or GLib.
 // However, GJS still supports it for now, but let's try to be clean.
 
+import Gio from 'gi://Gio';
 import * as log from './log.js';
 
 export function log_methods(obj: any) {
@@ -71,23 +72,32 @@ export function spawnAsync(...args: string[]) {
   }
 }
 
-export function spawnSync(...args: string[]) {
+export async function spawnSync(...args: string[]) {
   try {
-    let flags = GLib.SpawnFlags.SEARCH_PATH;
-    let [_success, _out, err, _errno] = GLib.spawn_sync(null, args, null, flags, null);
+    let proc = new Gio.Subprocess({
+        argv: args,
+        flags: Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
+    });
+    proc.init(null);
     
-    if (err && err.length > 0) {
-        // Use TextDecoder instead of byteArray
-        const decoder = new TextDecoder();
-        let err_string = decoder.decode(err);
-        if (err_string != "") {
-          log.error(`an error occurred: ${err_string}`);
-          return false;
-        }
-    }
-
-    return true;
+    return new Promise((resolve, reject) => {
+        proc.communicate_utf8_async(null, null, (proc: any, res: any) => {
+            try {
+                let [_stdout, stderr] = proc.communicate_utf8_finish(res);
+                if (stderr && stderr.length > 0) {
+                    log.error(`an error occurred: ${stderr}`);
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            } catch (err) {
+                log.error(`an exception occurred: ${err}`);
+                reject(err);
+            }
+        });
+    });
   } catch (err) {
     log.error(`an exception occurred: ${err}`);
+    return false;
   }
 }

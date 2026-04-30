@@ -8,6 +8,21 @@ declare module 'gi://Shell' { const Shell: any; export default Shell; }
 declare module 'gi://Clutter' { const Clutter: any; export default Clutter; }
 declare module 'gi://Gtk' { const Gtk: any; export default Gtk; }
 declare module 'gi://Adw' { const Adw: any; export default Adw; }
+declare module 'gi://Gdk' { const Gdk: any; export default Gdk; }
+declare namespace Gdk {
+    export const KEY_Escape: any;
+    export const KEY_BackSpace: any;
+    export const KEY_Shift_L: any;
+    export const KEY_Shift_R: any;
+    export const KEY_Control_L: any;
+    export const KEY_Control_R: any;
+    export const KEY_Alt_L: any;
+    export const KEY_Alt_R: any;
+    export const KEY_Meta_L: any;
+    export const KEY_Meta_R: any;
+    export const KEY_Super_L: any;
+    export const KEY_Super_R: any;
+}
 
 declare namespace St {
     export type ScrollView = any;
@@ -54,7 +69,7 @@ declare module 'resource:///org/gnome/shell/ui/popupMenu.js' {
         setOrnament(ornament: any): void;
         _ornamentLabel: any;
     }
-    export class PopupSeparatorMenuItem extends PopupBaseMenuItem {}
+    export class PopupSeparatorMenuItem extends PopupBaseMenuItem { }
     export class PopupSwitchMenuItem extends PopupBaseMenuItem {
         constructor(label: string, active: boolean, params?: any);
         state: boolean;

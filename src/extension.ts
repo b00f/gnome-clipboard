@@ -24,6 +24,7 @@ export default class GnomeClipboardExtension extends Extension {
                 () => this.openPreferences()
             );
             Main.panel.addToStatusArea(this.uuid, this._panel);
+            this._panel.init();
         }
 
         this._addKeybinding();
@@ -40,20 +41,36 @@ export default class GnomeClipboardExtension extends Extension {
     }
 
     private _addKeybinding() {
-        (Main as any).wm.addKeybinding(
-            Settings.SHORTCUT_MENU,
-            this.getSettings(Settings.SCHEMA_ID),
-            Meta.KeyBindingFlags.NONE,
-            Shell.ActionMode.ALL,
-            () => {
-                if (this._panel) {
-                    this._panel.toggle();
-                }
-            }
-        );
+        const settings = this.getSettings(Settings.SCHEMA_ID);
+        const wm = (Main as any).wm;
+
+        wm.addKeybinding(Settings.SHORTCUT_MENU, settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.ALL, () => {
+            if (this._panel) this._panel.toggle();
+        });
+
+        wm.addKeybinding(Settings.SHORTCUT_CLEAR, settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.ALL, () => {
+            if (this._panel) this._panel.clearHistory();
+        });
+
+        wm.addKeybinding(Settings.SHORTCUT_PRIVATE_MODE, settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.ALL, () => {
+            if (this._panel) this._panel.togglePrivateMode();
+        });
+
+        wm.addKeybinding(Settings.SHORTCUT_NEXT, settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.ALL, () => {
+            if (this._panel) this._panel.selectNextItem();
+        });
+
+        wm.addKeybinding(Settings.SHORTCUT_PREV, settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.ALL, () => {
+            if (this._panel) this._panel.selectPrevItem();
+        });
     }
 
     private _removeKeybinding() {
-        (Main as any).wm.removeKeybinding(Settings.SHORTCUT_MENU);
+        const wm = (Main as any).wm;
+        wm.removeKeybinding(Settings.SHORTCUT_MENU);
+        wm.removeKeybinding(Settings.SHORTCUT_CLEAR);
+        wm.removeKeybinding(Settings.SHORTCUT_PRIVATE_MODE);
+        wm.removeKeybinding(Settings.SHORTCUT_NEXT);
+        wm.removeKeybinding(Settings.SHORTCUT_PREV);
     }
 }

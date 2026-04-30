@@ -19,14 +19,24 @@ export class Store {
     }
   }
 
-  load(): any {
+  async load(): Promise<any> {
     log.info(`try to load history.`);
 
     let history: any = [];
     try {
       let file = Gio.file_new_for_path(this._path);
-      let [success, contents] = file.load_contents(null);
-      if (success && contents) {
+      
+      const [contents] = await new Promise<any>((resolve, reject) => {
+        file.load_contents_async(null, (file: any, res: any) => {
+            try {
+                resolve(file.load_contents_finish(res));
+            } catch (e) {
+                reject(e);
+            }
+        });
+      });
+
+      if (contents) {
         const decoder = new TextDecoder();
         history = JSON.parse(decoder.decode(contents));
       }
@@ -37,25 +47,45 @@ export class Store {
     return history;
   }
 
-  save(history: any) {
+  async save(history: any) {
     log.info(`try to save history.`);
 
     try {
       let json = JSON.stringify(history);
-      GLib.file_set_contents(this._path, json);
+      let file = Gio.file_new_for_path(this._path);
+      const bytes = GLib.Bytes.new(new TextEncoder().encode(json));
+      
+      await new Promise<void>((resolve, reject) => {
+        file.replace_contents_async(bytes, null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null, (file: any, res: any) => {
+            try {
+                file.replace_contents_finish(res);
+                resolve();
+            } catch (e) {
+                reject(e);
+            }
+        });
+      });
     } catch (err) {
       log.error(`an exception occurred: ${err}`);
     }
   }
 
-  saveImage(id: number, bytes: any): string | null {
+  async saveImage(id: number, bytes: any): Promise<string | null> {
     let filename = `${id}.png`;
     let path = GLib.build_filenamev([this._imagesDir, filename]);
     try {
-      // In GJS, GLib.file_set_contents expects Uint8Array or string.
-      // bytes from St.Clipboard is GLib.Bytes, so we need get_data().
-      let data = bytes.get_data ? bytes.get_data() : bytes;
-      GLib.file_set_contents(path, data);
+      let file = Gio.file_new_for_path(path);
+      
+      await new Promise<void>((resolve, reject) => {
+        file.replace_contents_async(bytes, null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null, (file: any, res: any) => {
+            try {
+                file.replace_contents_finish(res);
+                resolve();
+            } catch (e) {
+                reject(e);
+            }
+        });
+      });
       return path;
     } catch (err) {
       log.error(`failed to save image: ${err}`);

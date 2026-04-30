@@ -1,6 +1,17 @@
+# Build artifacts
 *.zip
 *.mo
-build
-dist
+src/build/
+dist/
 *.compiled
+
+# Local development
+venv
+scratch/
+.vscode/
+.DS_Store
+node_modules/
+
+# Logs
+*.log
 CodebaseMemory.md

@@ -10,6 +10,10 @@ export const SHOW_NOTIFICATIONS = "show-notifications";
 export const PRIVATE_MODE = "private-mode";
 export const BLACKLIST = "blacklist";
 export const SHORTCUT_MENU = "shortcut-menu";
+export const SHORTCUT_CLEAR = "shortcut-clear";
+export const SHORTCUT_PRIVATE_MODE = "shortcut-private-mode";
+export const SHORTCUT_NEXT = "shortcut-next";
+export const SHORTCUT_PREV = "shortcut-prev";
 
 
 export const HISTORY_SORT_COPY_TIME = 0;
@@ -23,8 +27,8 @@ export class ExtensionSettings {
         this._settings = settings;
     }
 
-    onChanged(callback: () => void) {
-        this._settings.connect('changed', callback);
+    onChanged(callback: () => void): number {
+        return this._settings.connect('changed', callback);
     }
 
     historySize(): number {
@@ -65,6 +69,22 @@ export class ExtensionSettings {
 
     shortcutMenu(): string[] {
         return this._settings.get_strv(SHORTCUT_MENU);
+    }
+    
+    shortcutClear(): string[] {
+        return this._settings.get_strv(SHORTCUT_CLEAR);
+    }
+    
+    shortcutPrivateMode(): string[] {
+        return this._settings.get_strv(SHORTCUT_PRIVATE_MODE);
+    }
+    
+    shortcutNext(): string[] {
+        return this._settings.get_strv(SHORTCUT_NEXT);
+    }
+    
+    shortcutPrev(): string[] {
+        return this._settings.get_strv(SHORTCUT_PREV);
     }
 
     getSettings(): Gio.Settings {

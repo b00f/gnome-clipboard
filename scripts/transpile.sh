@@ -24,7 +24,6 @@ ASSETS=(
 # Directories to be copied from root to dist
 ASSET_DIRS=(
     "schemas"
-    "po"
 )
 
 # --- Helpers ---
@@ -78,6 +77,20 @@ for dir in "${ASSET_DIRS[@]}"; do
     fi
 done
 
+# Compile translations
+info "Compiling translations..."
+if [[ -d "po" ]]; then
+    for po_file in po/*.po; do
+        if [[ -f "$po_file" ]]; then
+            lang=$(basename "$po_file" .po)
+            mkdir -p "${DIST_DIR}/locale/${lang}/LC_MESSAGES"
+            msgfmt "$po_file" -o "${DIST_DIR}/locale/${lang}/LC_MESSAGES/gnome-clipboard.mo"
+        fi
+    done
+else
+    warn "Translation directory 'po' not found."
+fi
+
 # Copy stylesheets
 info "Copying stylesheets..."
 cp "${SRC_DIR}"/*.css "${DIST_DIR}/" 2>/dev/null || warn "No stylesheets found in ${SRC_DIR}."
@@ -87,6 +100,10 @@ info "Finalizing JavaScript files..."
 if [[ -d "${BUILD_DIR}" ]]; then
     cp -r "${BUILD_DIR}"/*.js "${DIST_DIR}/"
     rm -rf "${BUILD_DIR}"
+    
+    # Remove compiled schemas (should not be shipped)
+    info "Removing compiled schemas..."
+    rm -f "${DIST_DIR}/schemas/gschemas.compiled"
 else
     error "Build output directory '${BUILD_DIR}' not found. Please check your tsconfig.json."
 fi
