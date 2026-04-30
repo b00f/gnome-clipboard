@@ -20,6 +20,8 @@ export class HistoryMenu
   private _onRemoveItem: (item: ClipboardItem.ClipboardItem) => void;
   private _nextItem: ClipboardItem.ClipboardItem | null;
   private _prevItem: ClipboardItem.ClipboardItem | null;
+  private _items: Map<number, MenuItem.MenuItem>;
+  private _headers: Map<string, any>;
 
   constructor(
     onActivateItem: (item: ClipboardItem.ClipboardItem) => void,
@@ -32,19 +34,38 @@ export class HistoryMenu
     this._onRemoveItem = onRemoveItem;
     this._nextItem = null;
     this._prevItem = null;
+    this._items = new Map();
+    this._headers = new Map();
   }
 
   public rebuildMenu(
     history: Array<ClipboardItem.ClipboardItem>,
     selectedID: number) {
-    super.removeAll();
+    
     this._nextItem = null;
     this._prevItem = null;
 
     if (history.length === 0) {
+        super.removeAll();
+        this._items.clear();
+        this._headers.clear();
         this._showEmptyState();
         return;
     }
+
+    // Identify removed items
+    const newIds = new Set(history.map(h => h.id()));
+    for (const [id, item] of this._items) {
+        if (!newIds.has(id)) {
+            item.destroy();
+            this._items.delete(id);
+        }
+    }
+
+    // Clear sections to re-add headers and items in correct order
+    // Note: We don't destroy reused items, we just remove them from parent
+    this.scrollViewSection.removeAll();
+    this._headers.clear();
 
     const pinned = history.filter(h => h.pinned);
     const recent = history.filter(h => !h.pinned);
@@ -76,11 +97,20 @@ export class HistoryMenu
   }
 
   private _addItem(info: ClipboardItem.ClipboardItem, selectedID: number, history: Array<ClipboardItem.ClipboardItem>) {
-    let item = new MenuItem.MenuItem(info,
-      this.onActivateItem.bind(this),
-      this.onPinItem.bind(this),
-      this.onRemoveItem.bind(this),
-    );
+    let item = this._items.get(info.id());
+    
+    if (item) {
+        // Update existing item
+        item.cbInfo = info;
+        item.updateUI(); // I'll need to add this method to MenuItem
+    } else {
+        item = new MenuItem.MenuItem(info,
+          this.onActivateItem.bind(this),
+          this.onPinItem.bind(this),
+          this.onRemoveItem.bind(this),
+        );
+        this._items.set(info.id(), item);
+    }
 
     if (info.id() == selectedID) {
       (item as any).add_style_class_name('selected');

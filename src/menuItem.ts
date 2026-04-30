@@ -11,6 +11,8 @@ export class MenuItem
 
   public cbInfo: ClipboardItem.ClipboardItem;
   private static _iconCache: Map<string, any> = new Map();
+  private _timeLabel: any;
+  private _pinBtn: any;
 
   static {
     GObject.registerClass(this);
@@ -76,11 +78,11 @@ export class MenuItem
     });
 
     // Relative Time
-    let timeLabel = new St.Label({
+    this._timeLabel = new St.Label({
         text: this._formatRelativeTime(cbInfo.copiedAt),
         style_class: 'clipboard-item-meta'
     });
-    metaBox.add_child(timeLabel);
+    metaBox.add_child(this._timeLabel);
 
     headerBox.add_child(metaBox);
     mainBox.add_child(headerBox);
@@ -95,12 +97,12 @@ export class MenuItem
     });
 
     // Pin Button
-    let pinBtn = this._createActionBtn(
+    this._pinBtn = this._createActionBtn(
         cbInfo.pinned ? "view-pin-symbolic" : "view-pin-symbolic", 
         cbInfo.pinned ? "pinned" : "unpinned"
     );
-    actionContainer.add_child(pinBtn);
-    pinBtn.connect('clicked', () => onPin(this));
+    actionContainer.add_child(this._pinBtn);
+    this._pinBtn.connect('clicked', () => onPin(this));
 
     // Remove Button
     let removeBtn = this._createActionBtn("edit-delete-symbolic", "remove-icon");
@@ -112,6 +114,15 @@ export class MenuItem
     this.connect('activate', () => {
       onActivate(this);
     });
+  }
+
+  public updateUI() {
+    this._timeLabel.set_text(this._formatRelativeTime(this.cbInfo.copiedAt));
+    
+    // Update pin status
+    this._pinBtn.remove_style_class_name('pinned');
+    this._pinBtn.remove_style_class_name('unpinned');
+    this._pinBtn.add_style_class_name(this.cbInfo.pinned ? 'pinned' : 'unpinned');
   }
 
   private _createActionBtn(iconName: string, extraClass: string) {

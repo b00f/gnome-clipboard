@@ -456,6 +456,7 @@ export class ClipboardPanel
     if (this._saveTimerID) {
       GLib.source_remove(this._saveTimerID);
       this._saveTimerID = 0;
+      this._saveHistory();
     }
 
     super.destroy();
