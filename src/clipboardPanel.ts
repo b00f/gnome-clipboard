@@ -34,14 +34,16 @@ export class ClipboardPanel
   private _keyPressEventID = 0;
   private _settingsChangedID = 0;
   private _saveTimerID = 0;
+  private _refreshTimerID = 0;
+  private _selection: any;
   private _history: History.History;
   private _historyMenu: HistoryMenu.HistoryMenu;
   private _settings: Settings.ExtensionSettings;
   private _actionBar: ActionBar.ActionBar;
   private _searchBox: SearchBox.SearchBox;
-  private _selection: any;
   private _selectedID: number = 0;
   private store: Store.Store;
+  private _legacyStorePath: string = "";
   private _openPrefsCallback: (() => void) | null = null;
 
   static {
@@ -57,11 +59,11 @@ export class ClipboardPanel
     log.info("initializing ...");
     this._history = new History.History();
     
-    // Use Meta.Selection for clipboard access (modern Wayland-compatible way)
     this._selection = Shell.Global.get().get_display().get_selection();
     this._settings = new Settings.ExtensionSettings(settings);
 
-    let path = GLib.get_user_cache_dir() + '/' + uuid;
+    let path = GLib.get_user_data_dir() + '/' + uuid;
+    this._legacyStorePath = GLib.get_user_cache_dir() + '/' + uuid;
     this.store = new Store.Store(path);
 
     let clipboardIcon = new St.Icon({
@@ -91,13 +93,16 @@ export class ClipboardPanel
 
     this._openStateChangedID = this._historyMenu.connect('open-state-changed',
       (_widget: any, open: boolean) => {
-        log.info("open-state-changed event");
+        log.info(`open-state-changed event: ${open}`);
         if (open) {
+          this._startRefreshTimer();
           GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
             this._searchBox.setText('');
             global.stage.set_key_focus(this._searchBox.searchEntry);
             return GLib.SOURCE_REMOVE;
           });
+        } else {
+          this._stopRefreshTimer();
         }
       });
 
@@ -140,8 +145,20 @@ export class ClipboardPanel
 
   public async init() {
     log.info("async init starting...");
-    const history = await this.store.load();
+    let history = await this.store.load();
+
+    if (history.length === 0) {
+      const legacyStore = new Store.Store(this._legacyStorePath);
+      const legacyHistory = await legacyStore.load();
+      if (legacyHistory.length > 0) {
+        log.info(`Final data type: ${typeof legacyHistory}, constructor: ${legacyHistory ? legacyHistory.constructor.name : 'null'}`);
+        history = legacyHistory;
+        await this.store.save(history);
+      }
+    }
+
     this._loadHistory(history);
+    this._checkClipboard();
   }
 
   private _setupMenu() {
@@ -203,19 +220,22 @@ export class ClipboardPanel
     }
 
     let id = utils.hashCode(text);
+    this._addToHistory(text);
+    
     if (id == this._selectedID) {
-      return false;
+      // Even if it's the same item, we might need to rebuild if sort order changed or to refresh timestamp
+      return true; 
     }
 
     this._selectedID = id;
-    this._addToHistory(text);
-
     return true;
   }
 
   private async _selectPrevItem() {
     let item = this._historyMenu.prevItem();
     if (item) {
+      this._selectedID = item.id();
+      this._historyMenu.scrollToItem(this._selectedID);
       await this._copyToClipboard(item);
     }
   }
@@ -223,6 +243,8 @@ export class ClipboardPanel
   private async _selectNextItem() {
     let item = this._historyMenu.nextItem();
     if (item) {
+      this._selectedID = item.id();
+      this._historyMenu.scrollToItem(this._selectedID);
       await this._copyToClipboard(item);
     }
   }
@@ -262,8 +284,12 @@ export class ClipboardPanel
     this._disconnectClipboardTimer();
     this._disconnectSelectionOwnerChanged();
 
-    if (this._settings.clipboardTimer()) {
+    let useTimer = this._settings.clipboardTimer();
+    if (useTimer || useTimer === undefined) {
       let interval = this._settings.clipboardTimerIntervalInMillisecond();
+      if (!interval || interval < 100) {
+        interval = 1000;
+      }
       log.info(`set timer every ${interval} ms`);
 
       this._clipboardTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval, () => {
@@ -297,42 +323,113 @@ export class ClipboardPanel
         }
     }
 
-    this._selection.get_text(Meta.SelectionType.SELECTION_CLIPBOARD, "text/plain", null, async (selection: any, res: any) => {
-      try {
-        let text = selection.get_text_finish(res);
-        if (text && text.length > 0) {
-          log.info(`set clipboard text content: ${text}`);
-          if (this.addClipboard(text)) {
-            this._rebuildMenu();
-            this._saveHistoryDebounced();
-          }
-        } else {
-          // Try image
-          this._selection.get_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/png', null, async (selection: any, res: any) => {
+    // Use a small delay to ensure the clipboard content is ready
+    GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+        this._selection.get_mimetypes(Meta.SelectionType.SELECTION_CLIPBOARD, (selection: any, res: any) => {
             try {
-              let bytes = selection.get_content_finish(res);
-              if (bytes) {
-                let id = utils.hashBytes(bytes);
-                if (id == this._selectedID) return;
+                let mimetypes = selection.get_mimetypes_finish(res);
+                let bestMime = this._findBestTextMime(mimetypes);
                 
-                log.info("set clipboard image content");
-                let path = await this.store.saveImage(id, bytes);
-                if (path) {
-                  this._selectedID = id;
-                  this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
-                  this._rebuildMenu();
-                  this._saveHistoryDebounced();
+                if (bestMime) {
+                    log.info(`Found best text mime: ${bestMime}`);
+                    selection.get_text(Meta.SelectionType.SELECTION_CLIPBOARD, bestMime, null, (selection: any, res: any) => {
+                        try {
+                            let result = selection.get_text_finish(res);
+                            let text = this._safeDecode(result);
+                            
+                            if (text && text.trim().length > 0) {
+                                log.info(`Captured text content: ${text.substring(0, 30)}...`);
+                                if (this.addClipboard(text)) {
+                                    this._rebuildMenu();
+                                    this._saveHistoryDebounced();
+                                }
+                            } else {
+                                this._checkImageClipboard();
+                            }
+                        } catch (e) {
+                            log.error(`Failed to get text content: ${e}`);
+                            this._checkImageClipboard();
+                        }
+                    });
+                } else {
+                    this._checkImageClipboard();
                 }
-              }
             } catch (e) {
-              log.error(`failed to get image content: ${e}`);
+                log.error(`Failed to handle clipboard: ${e}`);
+                this._checkImageClipboard();
             }
-          });
-        }
-      } catch (e) {
-        log.error(`failed to get clipboard text: ${e}`);
-      }
+        });
+        return GLib.SOURCE_REMOVE;
     });
+  }
+
+  private _findBestTextMime(mimetypes: string[]): string | null {
+      if (!mimetypes) return null;
+      const textMimes = ['UTF8_STRING', 'text/plain;charset=utf-8', 'text/plain', 'STRING', 'TEXT'];
+      for (let mime of textMimes) {
+          if (mimetypes.includes(mime)) return mime;
+      }
+      return null;
+  }
+
+  private _safeDecode(data: any): string {
+      if (!data) return "";
+      try {
+          // Try standard TextDecoder with safety wrapper
+          const ui8 = data instanceof Uint8Array ? data : new Uint8Array(data);
+          return new TextDecoder().decode(ui8);
+      } catch (e) {
+          log.warn(`TextDecoder failed, using fallback: ${e}`);
+          let text = "";
+          let bytes = data;
+          if (data && typeof data.get_data === 'function') {
+              bytes = data.get_data();
+          }
+          if (bytes && bytes.length) {
+              for (let i = 0; i < bytes.length; i++) {
+                  text += String.fromCharCode(bytes[i]);
+              }
+          }
+          return text;
+      }
+  }
+
+  private _checkImageClipboard() {
+    this._selection.get_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/png', null, (selection: any, res: any) => {
+        try {
+            let bytes = selection.get_content_finish(res);
+            if (bytes && bytes.get_size() > 0) {
+                log.info("Captured image content (image/png)");
+                this._processImageBytes(bytes);
+            } else {
+                // Try JPEG
+                this._selection.get_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/jpeg', null, (selection: any, res: any) => {
+                    try {
+                        let bytes = selection.get_content_finish(res);
+                        if (bytes && bytes.get_size() > 0) {
+                            log.info("Captured image content (image/jpeg)");
+                            this._processImageBytes(bytes);
+                        }
+                    } catch (e) {}
+                });
+            }
+        } catch (e) {
+            log.error(`Failed to handle image clipboard: ${e}`);
+        }
+    });
+  }
+
+  private async _processImageBytes(bytes: any) {
+    let id = utils.hashBytes(bytes);
+    if (id == this._selectedID) return;
+    
+    let path = await this.store.saveImage(id, bytes);
+    if (path) {
+        this._selectedID = id;
+        this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
+        this._rebuildMenu();
+        this._saveHistoryDebounced();
+    }
   }
 
   private async _copyToClipboard(item: ClipboardItem.ClipboardItem) {
@@ -358,7 +455,7 @@ export class ClipboardPanel
             log.error(`failed to load image for clipboard: ${e}`);
         }
     } else {
-        this._selection.set_text(Meta.SelectionType.SELECTION_CLIPBOARD, item.text);
+        this._selection.set_text(Meta.SelectionType.SELECTION_CLIPBOARD, 'text/plain', item.text);
     }
     
     this._selectedID = item.id();
@@ -430,6 +527,27 @@ export class ClipboardPanel
     });
   }
 
+  private _startRefreshTimer() {
+      this._stopRefreshTimer();
+      // Refresh every minute to update relative timestamps
+      this._refreshTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 60000, () => {
+          this._updateRelativeTimes();
+          return GLib.SOURCE_CONTINUE;
+      });
+  }
+
+  private _stopRefreshTimer() {
+      if (this._refreshTimerID) {
+          GLib.source_remove(this._refreshTimerID);
+          this._refreshTimerID = 0;
+      }
+  }
+
+  private _updateRelativeTimes() {
+      log.debug("refreshing relative times");
+      this._historyMenu.updateItemsUI();
+  }
+
   public toggle() {
     this.menu.toggle();
   }
@@ -454,6 +572,7 @@ export class ClipboardPanel
   public destroy() {
     this._disconnectClipboardTimer();
     this._disconnectSelectionOwnerChanged();
+    this._stopRefreshTimer();
 
     if (this._openStateChangedID) {
       this._historyMenu.disconnect(this._openStateChangedID);

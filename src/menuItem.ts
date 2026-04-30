@@ -12,6 +12,8 @@ export class MenuItem
   public cbInfo: ClipboardItem.ClipboardItem;
   private static _iconCache: Map<string, any> = new Map();
   private _timeLabel: any;
+  private _contentLabel: any;
+  private _contentIcon: any;
   private _pinBtn: any;
 
   static {
@@ -55,18 +57,18 @@ export class MenuItem
           MenuItem._iconCache.set(cbInfo.imagePath, gicon);
       }
       
-      let icon = new St.Icon({
+      this._contentIcon = new St.Icon({
         gicon: gicon,
         icon_size: 48,
         style_class: 'clipboard-image-preview'
       });
-      contentBox.add_child(icon);
+      contentBox.add_child(this._contentIcon);
     } else {
-      let label = new St.Label({ 
+      this._contentLabel = new St.Label({ 
           text: cbInfo.display(),
           style_class: 'clipboard-item-text'
       });
-      contentBox.add_child(label);
+      contentBox.add_child(this._contentLabel);
     }
     headerBox.add_child(contentBox);
 
@@ -119,6 +121,17 @@ export class MenuItem
   public updateUI() {
     this._timeLabel.set_text(this._formatRelativeTime(this.cbInfo.copiedAt));
     
+    if (this._contentLabel) {
+        this._contentLabel.set_text(this.cbInfo.display());
+    }
+
+    if (this._contentIcon && this.cbInfo.type === ClipboardItem.ClipboardItemType.IMAGE && this.cbInfo.imagePath) {
+        let gicon = MenuItem._iconCache.get(this.cbInfo.imagePath);
+        if (gicon) {
+            this._contentIcon.set_gicon(gicon);
+        }
+    }
+
     // Update pin status
     this._pinBtn.remove_style_class_name('pinned');
     this._pinBtn.remove_style_class_name('unpinned');

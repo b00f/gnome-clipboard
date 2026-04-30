@@ -53,18 +53,8 @@ export class HistoryMenu
         return;
     }
 
-    // Identify removed items
-    const newIds = new Set(history.map(h => h.id()));
-    for (const [id, item] of this._items) {
-        if (!newIds.has(id)) {
-            item.destroy();
-            this._items.delete(id);
-        }
-    }
-
-    // Clear sections to re-add headers and items in correct order
-    // Note: We don't destroy reused items, we just remove them from parent
     this.scrollViewSection.removeAll();
+    this._items.clear();
     this._headers.clear();
 
     const pinned = history.filter(h => h.pinned);
@@ -97,20 +87,12 @@ export class HistoryMenu
   }
 
   private _addItem(info: ClipboardItem.ClipboardItem, selectedID: number, history: Array<ClipboardItem.ClipboardItem>) {
-    let item = this._items.get(info.id());
-    
-    if (item) {
-        // Update existing item
-        item.cbInfo = info;
-        item.updateUI(); // I'll need to add this method to MenuItem
-    } else {
-        item = new MenuItem.MenuItem(info,
-          this.onActivateItem.bind(this),
-          this.onPinItem.bind(this),
-          this.onRemoveItem.bind(this),
-        );
-        this._items.set(info.id(), item);
-    }
+    let item = new MenuItem.MenuItem(info,
+      this.onActivateItem.bind(this),
+      this.onPinItem.bind(this),
+      this.onRemoveItem.bind(this),
+    );
+    this._items.set(info.id(), item);
 
     if (info.id() == selectedID) {
       (item as any).add_style_class_name('selected');
@@ -122,8 +104,8 @@ export class HistoryMenu
       if (index + 1 < history.length) {
         this._prevItem = history[index + 1];
       }
-
-      super.scrollToBottom();
+    } else {
+      (item as any).remove_style_class_name('selected');
     }
 
     super.addMenuItem(item);
@@ -174,6 +156,40 @@ export class HistoryMenu
 
   public hasPrevItem() {
     return this._prevItem != null;
+  }
+
+  public scrollToItem(id: number) {
+      const item = this._items.get(id);
+      if (item) {
+          // Update selected style class for all items
+          for (const [itemId, menuItem] of this._items) {
+              if (itemId === id) {
+                  (menuItem as any).add_style_class_name('selected');
+              } else {
+                  (menuItem as any).remove_style_class_name('selected');
+              }
+          }
+
+          const adjustment = this.scrollView.get_vscroll_bar().get_adjustment();
+          const value = adjustment.value;
+          const pageSize = adjustment.page_size;
+
+          const alloc = (item as any).get_allocation_box();
+          const itemY = alloc.y1;
+          const itemHeight = (item as any).height;
+
+          if (itemY < value) {
+              adjustment.set_value(itemY);
+          } else if (itemY + itemHeight > value + pageSize) {
+              adjustment.set_value(itemY + itemHeight - pageSize);
+          }
+      }
+  }
+
+  public updateItemsUI() {
+      for (const item of this._items.values()) {
+          item.updateUI();
+      }
   }
 
   private onActivateItem(item: MenuItem.MenuItem) {

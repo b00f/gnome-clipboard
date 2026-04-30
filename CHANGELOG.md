@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [69.0.1] - 2026-04-30
+
+### Fixed
+- **Clipboard History Storage**: Critical fix moving clipboard data storage from cache directory (`~/.cache`) to XDG user data directory (`~/.local/share`). Cache directory is volatile and subject to system cleanup. **This ensures clipboard history persists across system restarts and cache clears.** Legacy data migration automatically preserves existing history from cache.
+- **GNOME 50 Compatibility**: Verified and tested full compatibility with GNOME 50 (Tokyo release).
+
 ## [69.0.0] - 2026-04-30
 
 ### Added

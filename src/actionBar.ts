@@ -72,10 +72,13 @@ export class ActionBar
     actionBox.add_child(this._settingsBtn);
     mainBox.add_child(actionBox);
 
-    // Enable Switch (at the end or start? let's keep it but make it look better)
+    // Enable Switch
     this._enableBtn = new PopupMenu.PopupSwitchMenuItem(_("Service"), true);
-    // this._enableBtn.actor.style_class = 'service-switch';
-    // mainBox.add_child(this._enableBtn.actor);
+    this._enableBtn.connect('toggled', (_item: any, _state: boolean) => {
+        // We might want to notify or trigger something here, 
+        // but since ClipboardPanel calls .enable() on every check, it works.
+    });
+    actionBox.add_child(this._enableBtn);
 
     this.add_child(mainBox);
   }
@@ -143,6 +146,6 @@ export class ActionBar
   }
 
   enable() {
-    return this._enableBtn.state;
+    return this._enableBtn ? !!this._enableBtn.state : true;
   }
 }
