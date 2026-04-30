@@ -1,8 +1,17 @@
-const { St, GObject } = imports.gi;
-const PopupMenu = imports.ui.popupMenu
+import St from 'gi://St';
+import GObject from 'gi://GObject';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
+let _ = (s: string) => s;
+
+export function init(gettextFunc: (s: string) => string) {
+    _ = gettextFunc;
+}
 
 export class SearchBox
   extends PopupMenu.PopupBaseMenuItem {
+
+  public searchEntry: St.Entry;
 
   static {
     GObject.registerClass(this);
@@ -11,24 +20,39 @@ export class SearchBox
   constructor() {
     super({
       reactive: false,
-      can_focus: true,
+      can_focus: false,
+      style_class: 'search-box-container'
     })
 
-    // TODO: add 'x' clear button inside the search box
-    // --------------------------------------------------
-    // |                                              X |
-    // --------------------------------------------------
     this.searchEntry = new St.Entry({
       style_class: 'search-box',
       can_focus: true,
-      hint_text: _('Type here to search...'),
-      track_hover: true
+      hint_text: _('Search clipboard...'),
+      track_hover: true,
+      x_expand: true,
     });
 
-    this.searchEntry.set_x_expand(true);
+    // Add search icon
+    let searchIcon = new St.Icon({
+        icon_name: 'edit-find-symbolic',
+        style_class: 'search-box-icon',
+        icon_size: 16,
+    });
+    this.searchEntry.set_primary_icon(searchIcon);
 
-    this.actor.add_child(this.searchEntry);
+    // Clear button
+    let clearIcon = new St.Icon({
+        icon_name: 'edit-clear-symbolic',
+        style_class: 'search-box-icon',
+        icon_size: 16,
+    });
+    
+    this.searchEntry.set_secondary_icon(clearIcon);
+    this.searchEntry.connect('secondary-icon-clicked', () => {
+        this.searchEntry.set_text('');
+    });
 
+    this.add_child(this.searchEntry);
   }
 
   onTextChanged(callback: any) {

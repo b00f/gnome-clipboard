@@ -1,13 +1,15 @@
 {
   "shell-version": [
-    "40",
-    "41",
-    "42",
-    "43",
-    "44"
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
   ],
-  "version": 67,
+  "version": 68,
   "gettext-domain" : "gnome-clipboard",
+  "settings-schema": "org.gnome.shell.extensions.gnome-clipboard",
   "uuid": "gnome-clipboard@b00f.github.io",
   "name": "Gnome Clipboard",
   "description": "A gnome shell extension to manage your clipboard.",

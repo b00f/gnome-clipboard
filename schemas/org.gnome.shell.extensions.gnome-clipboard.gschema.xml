@@ -33,6 +33,21 @@
       <summary>Show notifications</summary>
     </key>
 
+    <key type="b" name="private-mode">
+      <default>false</default>
+      <summary>Private mode</summary>
+    </key>
+
+    <key type="as" name="blacklist">
+      <default>[]</default>
+      <summary>Application blacklist</summary>
+    </key>
+
+    <key type="as" name="shortcut-menu">
+      <default>['&lt;Super&gt;v']</default>
+      <summary>Keyboard shortcut to open menu</summary>
+    </key>
+
     <key type="u" name="log-level">
       <default>0</default>
       <summary>

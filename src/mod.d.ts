@@ -1,374 +1,120 @@
-declare const global: Global,
-    imports: any,
-    log: any,
-    _: (arg: string) => string;
-
-interface Global {
-    get_current_time(): number;
-    get_pointer(): [number, number];
-    get_window_actors(): Array<Meta.WindowActor>;
-    log(msg: string): void;
-
-    display: Meta.Display;
-    run_at_leisure(func: () => void): void;
-    session_mode: string;
-    stage: Clutter.Actor;
-    window_group: Clutter.Actor;
-    window_manager: Meta.WindowManager;
-    workspace_manager: Meta.WorkspaceManager;
-}
-
-interface Rectangular {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
-
-interface DialogButtonAction {
-    label: string;
-    action: () => void;
-    key?: number;
-    default?: boolean;
-}
-
-declare type ProcessResult = [boolean, any, any, number];
-declare type SignalID = number;
-
-declare interface GLib {
-    PRIORITY_DEFAULT: number;
-    PRIORITY_LOW: number;
-
-    find_program_in_path(prog: string): string | null;
-    get_current_dir(): string;
-    get_monotonic_time(): number;
-
-    idle_add(priority: any, callback: () => boolean): number;
-
-    signal_handler_block(object: GObject.Object, signal: SignalID): void;
-    signal_handler_unblock(object: GObject.Object, signal: SignalID): void;
-
-    source_remove(id: SignalID): void;
-    spawn_command_line_sync(cmd: string): ProcessResult;
-    spawn_command_line_async(cmd: string): boolean;
-
-    timeout_add(priority: number, ms: number, callback: () => Boolean): number;
-}
-
-declare namespace GLib {
-    interface ByteArray {
-        data: number;
-        len: number;
-    }
-
-    interface Bytes {
-        compare(bytes2: Bytes): number;
-        equal(bytes2: Bytes): boolean;
-        get_data(size: number): number[];
-        get_size(): number;
-        hash(): number;
-        new_from_bytes(offset: number, length: number): Bytes;
-        ref(): Bytes;
-        unref(): void;
-        unref_to_array(): number[];
-        unref_to_data(size: number): number[];
-    }
-}
-
-declare namespace GObject {
-    interface Object {
-        connect(signal: string, callback: (...args: any) => boolean | void): SignalID;
-        disconnect(id: SignalID): void;
-
-        ref(): this;
-    }
-}
-
-declare namespace Gtk {
-    export enum Orientation {
-        HORIZONTAL,
-        VERTICAL,
-    }
-
-    export class Box extends Container {
-        constructor(orientation: Orientation, spacing: number);
-    }
-
-    export class Container extends Widget {
-        constructor();
-        add(widget: Widget): void;
-        set_border_width(border_width: number): void;
-    }
-
-    export class Widget {
-        constructor();
-        show_all?: () => void;
-        show(): void;
-    }
-}
-
-declare namespace Clutter {
-    enum ActorAlign {
-        FILL = 0,
-        START = 1,
-        CENTER = 3,
-        END = 3
-    }
-
-    enum AnimationMode {
-        EASE_IN_QUAD = 2,
-        EASE_OUT_QUAD = 3,
-    }
-
-    interface Actor extends Rectangular, GObject.Object {
-        visible: boolean;
-        x_align: ActorAlign;
-        y_align: ActorAlign;
-        opacity: number;
-
-        add(child: Actor): void;
-        add_child(child: Actor): void;
-        destroy(): void;
-        destroy_all_children(): void;
-        ease(params: Object): void;
-        hide(): void;
-        get_child_at_index(nth: number): Clutter.Actor | null;
-        get_n_children(): number;
-        get_parent(): Clutter.Actor | null;
-        get_stage(): Clutter.Actor | null;
-        get_transition(param: string): any | null;
-        grab_key_focus(): void;
-        is_visible(): boolean;
-        queue_redraw(): void;
-        remove_all_children(): void;
-        remove_all_transitions(): void;
-        remove_child(child: Actor): void;
-        set_child_above_sibling(child: Actor, sibling: Actor | null): void;
-        set_child_below_sibling(child: Actor, sibling: Actor | null): void;
-        set_easing_duration(msecs: number | null): void;
-        set_opacity(value: number): void;
-        set_size(width: number, height: number): void;
-        set_y_align(align: ActorAlign): void;
-        set_position(x: number, y: number): void;
-        set_size(width: number, height: number): void;
-        show(): void;
-        set_key_focus(child: Actor): void;
-    }
-
-    interface ActorBox {
-        new(x: number, y: number, width: number, height: number): ActorBox;
-    }
-
-    interface Text extends Actor {
-        get_text(): Readonly<string>;
-        set_text(text: string | null): void;
-    }
-}
-
-declare namespace Meta {
-    enum DisplayDirection {
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT,
-    }
-
-    enum MaximizeFlags {
-        HORIZONTAL,
-        VERTICAL,
-        BOTH
-    }
-
-    enum MotionDirection {
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT
-    }
-
-    interface Display extends GObject.Object {
-        get_current_monitor(): number;
-        get_focus_window(): null | Meta.Window;
-        get_monitor_index_for_rect(rect: Rectangular): number;
-        get_monitor_geometry(monitor: number): null | Rectangular;
-        get_monitor_neighbor_index(monitor: number, direction: DisplayDirection): number;
-        get_n_monitors(): number;
-        get_primary_monitor(): number;
-        get_tab_list(list: number, workspace: Meta.Workspace | null): Array<Meta.Window>;
-        get_workspace_manager(): WorkspaceManager;
-    }
-
-    interface Window extends Clutter.Actor {
-        appears_focused: Readonly<boolean>;
-        minimized: Readonly<boolean>;
-        window_type: Readonly<any>;
-
-        activate(time: number): void;
-        change_workspace_by_index(workspace: number, append: boolean): void;
-        delete(timestamp: number): void;
-        get_buffer_rect(): Rectangular;
-        get_compositor_private(): Clutter.Actor | null;
-        get_description(): string;
-        get_frame_rect(): Rectangular;
-        get_maximized(): number;
-        get_monitor(): number;
-        get_pid(): number;
-        get_stable_sequence(): number;
-        get_title(): string;
-        get_transient_for(): Window | null;
-        get_wm_class(): string | null;
-        get_work_area_for_monitor(monitor: number): null | Rectangular;
-        get_workspace(): Workspace;
-        has_focus(): boolean;
-        is_above(): boolean;
-        is_client_decorated(): boolean;
-        is_fullscreen(): boolean;
-        is_on_all_workspaces(): boolean;
-        is_skip_taskbar(): boolean;
-        make_above(): void;
-        make_fullscreen(): void;
-        maximize(flags: MaximizeFlags): void;
-        move_frame(user_op: boolean, x: number, y: number): void;
-        move_resize_frame(user_op: boolean, x: number, y: number, w: number, h: number): boolean;
-        raise(): void;
-        unmake_fullscreen(): void;
-        unmaximize(flags: any): void;
-        unminimize(): void;
-    }
-
-    interface WindowActor extends Clutter.Actor {
-        get_meta_window(): Meta.Window;
-    }
-
-    interface WindowManager extends GObject.Object {
-
-    }
-
-    interface Workspace extends GObject.Object {
-        n_windows: number;
-
-        activate(time: number): boolean;
-        activate_with_focus(window: Meta.Window, timestamp: number): void;
-        get_neighbor(direction: Meta.MotionDirection): null | Workspace;
-        get_work_area_for_monitor(monitor: number): null | Rectangular;
-        index(): number;
-    }
-
-    interface WorkspaceManager extends GObject.Object {
-        append_new_workspace(activate: boolean, timestamp: number): Workspace;
-        get_active_workspace(): Workspace;
-        get_active_workspace_index(): number;
-        get_n_workspaces(): number;
-        get_workspace_by_index(index: number): null | Workspace;
-        remove_workspace(workspace: Workspace, timestamp: number): void;
-        reorder_workspace(workspace: Workspace, new_index: number): void;
-    }
-}
-
-declare namespace Shell {
-    interface Dialog extends St.Widget {
-        _dialog: St.Widget;
-        contentLayout: St.Widget;
-    }
-
-    interface ModalDialog extends St.Widget {
-        contentLayout: St.Widget;
-        dialogLayout: Dialog;
-
-        addButton(action: DialogButtonAction): void;
-
-        close(timestamp: number): void;
-        open(timestamp: number, on_primary: boolean): void;
-
-        setInitialKeyFocus(actor: Clutter.Actor): void;
-    }
-}
+// GNOME Shell ESM Module Declarations
+declare module 'gi://St' { const St: any; export default St; }
+declare module 'gi://GObject' { const GObject: any; export default GObject; }
+declare module 'gi://Gio' { const Gio: any; export default Gio; }
+declare module 'gi://GLib' { const GLib: any; export default GLib; }
+declare module 'gi://Meta' { const Meta: any; export default Meta; }
+declare module 'gi://Shell' { const Shell: any; export default Shell; }
+declare module 'gi://Clutter' { const Clutter: any; export default Clutter; }
+declare module 'gi://Gtk' { const Gtk: any; export default Gtk; }
+declare module 'gi://Adw' { const Adw: any; export default Adw; }
 
 declare namespace St {
-    interface Button extends Widget {
-        set_label(label: string): void;
-    }
-
-    interface Widget extends Clutter.Actor {
-        add_style_class_name(name: string): void
-        add_style_pseudo_class(name: string): void;
-        add(child: St.Widget): void;
-        get_theme_node(): any
-        hide(): void;
-        remove_style_class_name(name: string): void;
-        remove_style_pseudo_class(name: string): void
-        set_style(inlinecss: string): boolean;
-        set_style_class_name(name: string): void;
-        set_style_pseudo_class(name: string): void;
-        show_all(): void;
-        show(): void;
-    }
-
-    interface Bin extends St.Widget {
-        // empty for now
-    }
-
-    interface Entry extends Widget {
-        clutter_text: any;
-
-        get_clutter_text(): Clutter.Text;
-        set_hint_text(hint: string): void;
-    }
-
-    export enum ClipboardType {
-        PRIMARY = 0,
-        CLIPBOARD = 1,
-    }
-
-    export type ClipboardCallbackFunc = (clipboard: Clipboard, text: string) => void;
-    export type ClipboardContentCallbackFunc = (clipboard: Clipboard, bytes: GLib.Bytes | Uint8Array) => void;
-
-    interface Clipboard extends GObject.Object {
-        get_content(type: ClipboardType, mimetype: string, callback: ClipboardContentCallbackFunc): void;
-        get_mimetypes(type: ClipboardType): string[];
-        get_text(type: ClipboardType, callback: ClipboardCallbackFunc): void;
-        set_content(type: ClipboardType, mimetype: string, bytes: GLib.Bytes | Uint8Array): void;
-        set_text(type: ClipboardType, text: string): void;
-        get_default(): Clipboard;
-    }
+    export type ScrollView = any;
+    export type Entry = any;
+    export type Widget = any;
+    export type Bin = any;
+    export const ClipboardType: any;
+    export const PolicyType: any;
 }
 
 declare namespace Gio {
-    interface AsyncResult {
-        get_source_object () : GObject.Object;
-        get_user_data () : any;
-        is_tagged (source_tag: any) : boolean;
-        legacy_propagate_error () : boolean;
-    }
-
-    interface FileOutputStream {
-    }
-
-    interface AsyncReadyCallback {
-        (source_object: GObject.Object, res: AsyncResult, user_data: any) : void;
-    }
-
-    interface Cancellable extends GObject.Object {
-        cancel(): void;
-    }
-
-    interface File {
-        load_contents(cancellable: Cancellable | null): any[];
-        replace (etag: string, make_backup: boolean, flags: FileCreateFlags, cancellable: Cancellable) : FileOutputStream;
-        replace_async (etag: string, make_backup: boolean, flags: FileCreateFlags, io_priority: number, cancellable: Cancellable | null, callback: AsyncReadyCallback, user_data: any) : void;
-        replace_contents (contents: number[], length: number, etag: string, make_backup: boolean, flags: FileCreateFlags, new_etag: string, cancellable: Cancellable) : boolean;
-        replace_contents_async (contents: number[], length: number, etag: string, make_backup: boolean, flags: FileCreateFlags, cancellable: Cancellable, callback: AsyncReadyCallback, user_data: any) : void;
-        replace_contents_bytes_async (contents: GLib.Bytes, etag: string, make_backup: boolean, flags: FileCreateFlags, cancellable: Cancellable, callback: AsyncReadyCallback, user_data: any) : void;
-        replace_contents_finish (res: AsyncResult, new_etag: string) : boolean;
-        replace_finish (res: AsyncResult) : FileOutputStream;
-
-    }
-
-    enum FileCreateFlags {
-        NONE = 0,
-        PRIVATE = 1,
-        REPLACE_DESTINATION = 2
-    }
-
-    function file_new_for_path(path: string): File;
+    export type Settings = any;
+    export const SettingsBindFlags: any;
 }
+
+declare namespace Adw {
+    export type PreferencesWindow = any;
+    export type PreferencesPage = any;
+    export type PreferencesGroup = any;
+    export type ActionRow = any;
+}
+
+declare namespace Gtk {
+    export type SpinButton = any;
+    export type Switch = any;
+    export type Adjustment = any;
+    export const Align: any;
+}
+
+declare module 'resource:///org/gnome/shell/ui/main.js' {
+    export const panel: any;
+    export function notify(title: string, msg: string): void;
+}
+
+declare module 'resource:///org/gnome/shell/ui/popupMenu.js' {
+    export class PopupBaseMenuItem {
+        constructor(params?: any);
+        add_child(child: any): void;
+        actor: any;
+        connect(signal: string, callback: Function): number;
+        disconnect(id: number): void;
+        destroy(): void;
+        visible: boolean;
+        setOrnament(ornament: any): void;
+        _ornamentLabel: any;
+    }
+    export class PopupSeparatorMenuItem extends PopupBaseMenuItem {}
+    export class PopupSwitchMenuItem extends PopupBaseMenuItem {
+        constructor(label: string, active: boolean, params?: any);
+        state: boolean;
+    }
+    export class PopupMenuSection {
+        actor: any;
+        addMenuItem(item: any): void;
+        removeAll(): void;
+        _getMenuItems(): any[];
+        connect(signal: string, callback: Function): number;
+        disconnect(id: number): void;
+    }
+    export const Ornament: any;
+}
+
+declare module 'resource:///org/gnome/shell/ui/panelMenu.js' {
+    export class Button {
+        constructor(menuAlignment: number, nameText: string, dontCreateMenu: boolean);
+        menu: any;
+        add_child(child: any): void;
+        emit(signal: string, ...args: any[]): void;
+        connect(signal: string, callback: Function): number;
+        destroy(): void;
+    }
+}
+
+declare module 'resource:///org/gnome/shell/ui/modalDialog.js' {
+    export class ModalDialog {
+        constructor();
+        contentLayout: any;
+        setButtons(buttons: any[]): void;
+        open(): void;
+        close(): void;
+    }
+}
+
+declare module 'resource:///org/gnome/shell/extensions/extension.js' {
+    export class Extension {
+        uuid: string;
+        path: string;
+        getSettings(schema?: string): any;
+        gettext(msg: string): string;
+        openPreferences(): void;
+    }
+}
+
+declare module 'resource:///org/gnome/shell/extensions/prefs.js' {
+    export class ExtensionPreferences {
+        getSettings(schema?: string): any;
+        gettext(msg: string): string;
+    }
+}
+
+declare module 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js' {
+    export class ExtensionPreferences {
+        getSettings(schema?: string): any;
+        gettext(msg: string): string;
+    }
+}
+
+declare const global: any;
+declare const imports: any;
+declare const Clutter: any;

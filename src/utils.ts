@@ -1,13 +1,10 @@
-// @ts-ignore
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+import GLib from 'gi://GLib';
+// In GNOME 45+, imports.byteArray is deprecated. Use standard JS methods or GLib.
+// However, GJS still supports it for now, but let's try to be clean.
 
-const GLib = imports.gi.GLib;
-const ByteArray = imports.byteArray;
+import * as log from './log.js';
 
-import * as log from 'log';
-
-// @ts-ignore
-export function log_methods(obj) {
+export function log_methods(obj: any) {
   var result = [];
   for (var id in obj) {
     try {
@@ -22,9 +19,7 @@ export function log_methods(obj) {
   log.info(result.toString());
 }
 
-// https://stackoverflow.com/questions/9382167/serializing-object-that-contains-cyclic-object-value
-// @ts-ignore
-export function log_object(obj) {
+export function log_object(obj: any) {
   let seen: object[] = [];
   let json = JSON.stringify(obj, function (_key, val) {
     if (val != null && typeof val == "object") {
@@ -38,8 +33,6 @@ export function log_object(obj) {
   log.info(json);
 }
 
-// Javascript implementation of Java’s String.hashCode() method
-// https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
 export function hashCode(text: string): number {
   var hash = 0;
   if (text.length == 0) return hash;
@@ -51,7 +44,13 @@ export function hashCode(text: string): number {
   return hash;
 }
 
-// @ts-ignore
+export function hashBytes(bytes: any): number {
+  if (!bytes) return 0;
+  // Use GLib to compute a checksum
+  let checksum = GLib.compute_checksum_for_data(GLib.ChecksumType.MD5, bytes.get_data());
+  return hashCode(checksum);
+}
+
 export function truncate(text: string, length: number): string {
   text = text.trim();
   text = text.replace(/\s+/g, ' ');
@@ -63,9 +62,7 @@ export function truncate(text: string, length: number): string {
   return text;
 }
 
-
-// @ts-ignore
-export function spawnAsync(...args) {
+export function spawnAsync(...args: string[]) {
   try {
     let flags = GLib.SpawnFlags.SEARCH_PATH;
     GLib.spawn_async(null, args, null, flags, null);
@@ -74,16 +71,19 @@ export function spawnAsync(...args) {
   }
 }
 
-// @ts-ignore
-export function spawnSync(...args) {
+export function spawnSync(...args: string[]) {
   try {
     let flags = GLib.SpawnFlags.SEARCH_PATH;
     let [_success, _out, err, _errno] = GLib.spawn_sync(null, args, null, flags, null);
-    // Clear warning: Some code called array.toString() on a Uint8Array instance. Previously this would have interpreted ....
-    let err_string = ByteArray.toString(err);
-    if (err_string != "") {
-      log.error(`an error occurred: ${err}`);
-      return false;
+    
+    if (err && err.length > 0) {
+        // Use TextDecoder instead of byteArray
+        const decoder = new TextDecoder();
+        let err_string = decoder.decode(err);
+        if (err_string != "") {
+          log.error(`an error occurred: ${err_string}`);
+          return false;
+        }
     }
 
     return true;

@@ -1,34 +1,94 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-# Uncommetn this if you want to see the commands
-# set -ex
+# ==============================================================================
+# GNOME Clipboard Build Script
+# ------------------------------------------------------------------------------
+# Professional build script to transpile TypeScript and prepare the distribution.
+# This script does NOT rely on node_modules and uses the system 'tsc'.
+# ==============================================================================
 
-pwd=$(pwd)
+set -euo pipefail
 
-# In goes standard JS. Out comes GJS-compatible JS
-transpile() {
-    cat ${src} | sed -e 's#export function#function#g' \
-        -e 's#export var#var#g' \
-        -e 's#export const#var#g' \
-        -e 's#Object.defineProperty(exports, "__esModule", { value: true });#var exports = {};#g' \
-        | sed -E 's/export class (\w+)/var \1 = class \1/g' \
-        | sed -E "s/import \* as (\w+) from '(\w+)'/const \1 = Me.imports.\2/g" > ${dest}
-}
+# --- Configuration ---
+SRC_DIR="src"
+BUILD_DIR="${SRC_DIR}/build"
+DIST_DIR="dist"
 
-rm -rf dist src/build
-mkdir -p dist/
+# Files to be copied from the root to dist
+ASSETS=(
+    "README.md"
+    "LICENSE"
+    "metadata.json"
+)
 
-# Transpile to JavaScript
-tsc --p ./src &
+# Directories to be copied from root to dist
+ASSET_DIRS=(
+    "schemas"
+    "po"
+)
 
-wait
+# --- Helpers ---
+info() { echo -e "\033[0;32m[INFO]\033[0m $*"; }
+warn() { echo -e "\033[0;33m[WARN]\033[0m $*"; }
+error() { echo -e "\033[0;31m[ERROR]\033[0m $*" >&2; exit 1; }
 
-# Convert JS to GJS-compatible scripts
-cp -r README.md LICENSE metadata.json schemas src/*.css po dist &
+# --- Initialization ---
+info "Starting build process..."
 
-for src in $(find src/build -name '*.js'); do
-    dest=$(echo $src | sed s#src/build#dist#g)
-    transpile &
+# Dependency check
+TSC="tsc"
+if ! command -v tsc >/dev/null 2>&1; then
+    if command -v npx >/dev/null 2>&1; then
+        warn "tsc not found. Falling back to 'npx -p typescript tsc'..."
+        TSC="npx -p typescript tsc"
+    else
+        error "TypeScript compiler (tsc) not found. Please install it (e.g., sudo npm install -g typescript)."
+    fi
+fi
+
+# Cleanup previous build
+info "Cleaning up old build artifacts..."
+rm -rf "${DIST_DIR}" "${BUILD_DIR}"
+mkdir -p "${DIST_DIR}"
+
+# --- Compilation ---
+info "Compiling TypeScript..."
+if ! $TSC --project "${SRC_DIR}"; then
+    error "TypeScript compilation failed."
+fi
+
+# --- Packaging ---
+info "Copying assets to distribution folder..."
+
+# Copy individual files
+for file in "${ASSETS[@]}"; do
+    if [[ -f "${file}" ]]; then
+        cp "${file}" "${DIST_DIR}/"
+    else
+        warn "Asset file '${file}' not found."
+    fi
 done
 
-wait
+# Copy directories
+for dir in "${ASSET_DIRS[@]}"; do
+    if [[ -d "${dir}" ]]; then
+        cp -r "${dir}" "${DIST_DIR}/"
+    else
+        warn "Asset directory '${dir}' not found."
+    fi
+done
+
+# Copy stylesheets
+info "Copying stylesheets..."
+cp "${SRC_DIR}"/*.css "${DIST_DIR}/" 2>/dev/null || warn "No stylesheets found in ${SRC_DIR}."
+
+# Move compiled JS to dist
+info "Finalizing JavaScript files..."
+if [[ -d "${BUILD_DIR}" ]]; then
+    cp -r "${BUILD_DIR}"/*.js "${DIST_DIR}/"
+    rm -rf "${BUILD_DIR}"
+else
+    error "Build output directory '${BUILD_DIR}' not found. Please check your tsconfig.json."
+fi
+
+info "Build successfully completed! Output is in '${DIST_DIR}/'."

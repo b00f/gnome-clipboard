@@ -1,11 +1,23 @@
-const {
-  St,
-} = imports.gi;
-const PopupMenu = imports.ui.popupMenu;
-const GObject = imports.gi.GObject;
+import St from 'gi://St';
+import GObject from 'gi://GObject';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
+let _ = (s: string) => s;
+
+export function init(gettextFunc: (s: string) => string) {
+    _ = gettextFunc;
+}
 
 export class ActionBar
   extends PopupMenu.PopupBaseMenuItem {
+
+  private _privateBtn: any;
+  private _pinBtn: any;
+  private _clearBtn: any;
+  private _settingsBtn: any;
+  private _prevBtn: any;
+  private _nextBtn: any;
+  private _enableBtn: any;
 
   static {
     GObject.registerClass(this);
@@ -19,117 +31,115 @@ export class ActionBar
       can_focus: false,
       style_class: 'action-bar',
     })
-    // disabled hover
-    let actionsBox = new St.BoxLayout({
+    
+    let mainBox = new St.BoxLayout({
       vertical: false,
-      hover: false,
-      can_focus: false,
+      x_expand: true,
+      style_class: 'action-bar-container'
     });
 
-    // TODO:: Add tooltip
-    this._enableBtn = new PopupMenu.PopupSwitchMenuItem(
-      _("Enable"), true, {
-      style_class: 'action-bar-btn',
-      reactive: true, hover: true,
-    });
-    this._enableBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._enableBtn);
-
-    // Add a spacer, disabled the hover
-    let spacer = new PopupMenu.PopupBaseMenuItem({
-      hover: false,
-      reactive: false,
-      activate: false,
-    });
-    spacer._ornamentLabel.visible = false;
-    actionsBox.add(spacer);
-
-    // 'Clear' button which removes all items from cache
-    this._clearBtn = new PopupMenu.PopupBaseMenuItem({
-      style_class: 'action-bar-btn'
+    // Navigation Group
+    let navBox = new St.BoxLayout({
+        vertical: false,
+        style_class: 'nav-group'
     });
 
-    let clearIcon = new St.Icon({
-      icon_name: "edit-delete-symbolic",
-      style_class: 'popup-menu-icon',
+    this._prevBtn = this._createIconButton('go-previous-symbolic', _('Previous Item'));
+    this._nextBtn = this._createIconButton('go-next-symbolic', _('Next Item'));
+    
+    navBox.add_child(this._prevBtn);
+    navBox.add_child(this._nextBtn);
+    mainBox.add_child(navBox);
+
+    // Spacer
+    let spacer = new St.Widget({ x_expand: true });
+    mainBox.add_child(spacer);
+
+    // Actions Group
+    let actionBox = new St.BoxLayout({
+        vertical: false,
+        style_class: 'action-group'
     });
 
-    this._clearBtn.add_child(clearIcon);
-    this._clearBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._clearBtn);
+    this._privateBtn = this._createIconButton('view-conceal-symbolic', _('Private Mode'));
+    this._pinBtn = this._createIconButton('view-pin-symbolic', _('Pin Current Item'));
+    this._clearBtn = this._createIconButton('edit-delete-symbolic', _('Clear History'), 'action-btn-danger');
+    this._settingsBtn = this._createIconButton('emblem-system-symbolic', _('Settings'));
 
-    // 'Settings' button to open the settings dialog
-    this._settingsBtn = new PopupMenu.PopupBaseMenuItem({
-      style_class: 'action-bar-btn'
-    });
+    actionBox.add_child(this._privateBtn);
+    actionBox.add_child(this._pinBtn);
+    actionBox.add_child(this._clearBtn);
+    actionBox.add_child(this._settingsBtn);
+    mainBox.add_child(actionBox);
 
-    let settingsIcon = new St.Icon({
-      icon_name: "emblem-system-symbolic",
-      style_class: 'popup-menu-icon',
-    });
-    this._settingsBtn.add_child(settingsIcon);
-    this._settingsBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._settingsBtn);
+    // Enable Switch (at the end or start? let's keep it but make it look better)
+    this._enableBtn = new PopupMenu.PopupSwitchMenuItem(_("Service"), true);
+    // this._enableBtn.actor.style_class = 'service-switch';
+    // mainBox.add_child(this._enableBtn.actor);
 
-    // 'Prev' button to copy the previous item
-    this._prevBtn = new PopupMenu.PopupBaseMenuItem({
-      style_class: 'action-bar-btn'
-    });
-
-    let prevIcon = new St.Icon({
-      icon_name: "go-previous-symbolic",
-      style_class: 'popup-menu-icon',
-    });
-    this._prevBtn.add_child(prevIcon);
-    this._prevBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._prevBtn);
-
-    // 'Next' button to copy the next item
-    this._nextBtn = new PopupMenu.PopupBaseMenuItem({
-      style_class: 'action-bar-btn'
-    });
-
-    let nextIcon = new St.Icon({
-      icon_name: "go-next-symbolic",
-      style_class: 'popup-menu-icon',
-    });
-    this._nextBtn.add_child(nextIcon);
-    this._nextBtn._ornamentLabel.visible = false;
-    actionsBox.add(this._nextBtn);
-
-    this.actor.add(actionsBox);
+    this.add_child(mainBox);
   }
 
-  enableNextButton(_enable: boolean) {
-    // TODO: fix me
+  private _createIconButton(iconName: string, tooltip: string, extraClass: string = '') {
+      let button = new St.Button({
+          style_class: `action-btn ${extraClass}`,
+          child: new St.Icon({
+              icon_name: iconName,
+              icon_size: 16
+          }),
+          can_focus: true,
+          track_hover: true,
+          // x_align: St.Align.MIDDLE,
+          // y_align: St.Align.MIDDLE
+      });
+
+      // GNOME Shell doesn't have built-in tooltips for St.Button easily without extra code,
+      // but we can set accessibility label at least.
+      button.set_accessible_name(tooltip);
+      
+      return button;
   }
 
-  enablePrevButton(_enable: boolean) {
-    // TODO: fix me
+  enableNextButton(enable: boolean) {
+    this._nextBtn.reactive = enable;
+    this._nextBtn.opacity = enable ? 255 : 100;
+  }
+
+  enablePrevButton(enable: boolean) {
+    this._prevBtn.reactive = enable;
+    this._prevBtn.opacity = enable ? 255 : 100;
   }
 
   onNextItem(callback: () => void) {
-    this._nextBtn.connect('activate', (_obj: any) => {
-      callback();
-    });
+    this._nextBtn.connect('clicked', callback);
   }
 
   onPrevItem(callback: () => void) {
-    this._prevBtn.connect('activate', (_obj: any) => {
-      callback();
-    });
+    this._prevBtn.connect('clicked', callback);
   }
 
   onClearHistory(callback: () => void) {
-    this._clearBtn.connect('activate', (_obj: any) => {
-      callback();
-    });
+    this._clearBtn.connect('clicked', callback);
+  }
+
+  onPin(callback: () => void) {
+    this._pinBtn.connect('clicked', callback);
+  }
+
+  onTogglePrivateMode(callback: (active: boolean) => void) {
+    this._privateBtn.connect('clicked', () => callback(true));
+  }
+  
+  setPrivateMode(active: boolean) {
+    if (active) {
+      this._privateBtn.add_style_class_name('active-btn');
+    } else {
+      this._privateBtn.remove_style_class_name('active-btn');
+    }
   }
 
   onOpenSettings(callback: () => void) {
-    this._settingsBtn.connect('activate', (_obj: any) => {
-      callback();
-    });
+    this._settingsBtn.connect('clicked', callback);
   }
 
   enable() {

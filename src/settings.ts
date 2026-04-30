@@ -1,17 +1,3 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-
-interface Settings extends GObject.Object {
-    get_boolean(key: string): boolean;
-    set_boolean(key: string, value: boolean): void;
-
-    get_uint(key: string): number;
-    set_uint(key: string, value: number): void;
-
-    get_string(key: string): string;
-    set_string(key: string, value: string): void;
-
-    bind(key: string, object: GObject.Object, property: string, flags: any): void
-}
 
 export const SCHEMA_ID = 'org.gnome.shell.extensions.gnome-clipboard';
 
@@ -21,6 +7,9 @@ export const CLIPBOARD_TIMER = "clipboard-timer";
 export const TIMER_INTERVAL = "timer-interval";
 export const SAVE_PINNED = "save-pinned";
 export const SHOW_NOTIFICATIONS = "show-notifications";
+export const PRIVATE_MODE = "private-mode";
+export const BLACKLIST = "blacklist";
+export const SHORTCUT_MENU = "shortcut-menu";
 
 
 export const HISTORY_SORT_COPY_TIME = 0;
@@ -28,11 +17,14 @@ export const HISTORY_SORT_RECENT_USAGE = 1;
 export const HISTORY_SORT_MOST_USAGE = 2;
 
 export class ExtensionSettings {
-    private _settings: Settings = ExtensionUtils.getSettings(SCHEMA_ID);
+    private _settings: Gio.Settings;
+
+    constructor(settings: Gio.Settings) {
+        this._settings = settings;
+    }
 
     onChanged(callback: () => void) {
-        this._settings.connect('changed',
-            callback); //get notified on every schema change
+        this._settings.connect('changed', callback);
     }
 
     historySize(): number {
@@ -57,5 +49,25 @@ export class ExtensionSettings {
 
     showNotifications(): boolean {
         return this._settings.get_boolean(SHOW_NOTIFICATIONS);
+    }
+
+    privateMode(): boolean {
+        return this._settings.get_boolean(PRIVATE_MODE);
+    }
+
+    setPrivateMode(value: boolean) {
+        this._settings.set_boolean(PRIVATE_MODE, value);
+    }
+
+    blacklist(): string[] {
+        return this._settings.get_strv(BLACKLIST);
+    }
+
+    shortcutMenu(): string[] {
+        return this._settings.get_strv(SHORTCUT_MENU);
+    }
+
+    getSettings(): Gio.Settings {
+        return this._settings;
     }
 }
