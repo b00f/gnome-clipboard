@@ -57,7 +57,7 @@ export class MenuItem
       
       let icon = new St.Icon({
         gicon: gicon,
-        icon_size: 64,
+        icon_size: 48,
         style_class: 'clipboard-image-preview'
       });
       contentBox.add_child(icon);
