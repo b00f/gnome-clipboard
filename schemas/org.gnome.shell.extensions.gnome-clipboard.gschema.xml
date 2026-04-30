@@ -45,7 +45,32 @@
 
     <key type="as" name="shortcut-menu">
       <default>[]</default>
-      <summary>Keyboard shortcut to open menu</summary>
+      <summary>Shortcut to open history menu</summary>
+      <description>Keyboard shortcut to toggle the clipboard history menu.</description>
+    </key>
+
+    <key type="as" name="shortcut-clear">
+      <default>[]</default>
+      <summary>Shortcut to clear history</summary>
+      <description>Keyboard shortcut to clear all non-pinned clipboard items.</description>
+    </key>
+
+    <key type="as" name="shortcut-private-mode">
+      <default>[]</default>
+      <summary>Shortcut to toggle private mode</summary>
+      <description>Keyboard shortcut to enable/disable private mode (stopping clipboard monitoring).</description>
+    </key>
+
+    <key type="as" name="shortcut-next">
+      <default>[]</default>
+      <summary>Shortcut to select next item</summary>
+      <description>Keyboard shortcut to cycle to the next item in history without opening the menu.</description>
+    </key>
+
+    <key type="as" name="shortcut-prev">
+      <default>[]</default>
+      <summary>Shortcut to select previous item</summary>
+      <description>Keyboard shortcut to cycle to the previous item in history without opening the menu.</description>
     </key>
 
     <key type="u" name="log-level">

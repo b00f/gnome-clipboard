@@ -434,6 +434,23 @@ export class ClipboardPanel
     this.menu.toggle();
   }
 
+  public clearHistory() {
+    this._onClearHistory();
+  }
+
+  public togglePrivateMode() {
+    let current = this._settings.privateMode();
+    this._settings.setPrivateMode(!current);
+  }
+
+  public selectNextItem() {
+    this._selectNextItem();
+  }
+
+  public selectPrevItem() {
+    this._selectPrevItem();
+  }
+
   public destroy() {
     this._disconnectClipboardTimer();
     this._disconnectSelectionOwnerChanged();

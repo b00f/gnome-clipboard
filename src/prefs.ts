@@ -1,6 +1,7 @@
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
 
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import * as Settings from './settings.js';
@@ -150,20 +151,105 @@ export default class GnomeClipboardPreferences extends ExtensionPreferences {
         });
         privacyGroup.add(blacklistRow);
 
-        // Shortcut
-        const shortcutRow = new Adw.EntryRow({
-            title: this.gettext('Keyboard Shortcut (e.g. <Super>v)'),
+        // Shortcuts Group
+        const shortcutGroup = new Adw.PreferencesGroup({
+            title: this.gettext('Keyboard Shortcuts'),
+            description: this.gettext('Use formats like <Super>v, <Control><Alt>c, etc.'),
         });
-        const shortcutSettings = settings.get_strv(Settings.SHORTCUT_MENU);
-        shortcutRow.set_text(shortcutSettings.length > 0 ? shortcutSettings[0] : '');
-        shortcutRow.connect('changed', () => {
-            const text = shortcutRow.get_text().trim();
-            if (text.length > 0) {
-                settings.set_strv(Settings.SHORTCUT_MENU, [text]);
-            } else {
-                settings.set_strv(Settings.SHORTCUT_MENU, []);
+        page.add(shortcutGroup);
+
+        const addShortcutRow = (key: string, title: string) => {
+            shortcutGroup.add(this._createShortcutRow(settings, key, title));
+        };
+
+        addShortcutRow(Settings.SHORTCUT_MENU, this.gettext('Toggle History Menu'));
+        addShortcutRow(Settings.SHORTCUT_CLEAR, this.gettext('Clear History'));
+        addShortcutRow(Settings.SHORTCUT_PRIVATE_MODE, this.gettext('Toggle Private Mode'));
+        addShortcutRow(Settings.SHORTCUT_NEXT, this.gettext('Select Next Item'));
+        addShortcutRow(Settings.SHORTCUT_PREV, this.gettext('Select Previous Item'));
+    }
+
+    private _createShortcutRow(settings: Gio.Settings, key: string, title: string): Adw.ActionRow {
+        const row = new Adw.ActionRow({ title });
+        
+        const button = new Gtk.Button({
+            valign: Gtk.Align.CENTER,
+            has_frame: true,
+        });
+        row.add_suffix(button);
+
+        const updateButtonLabel = () => {
+            const val = settings.get_strv(key);
+            button.set_label(val.length > 0 ? val[0] : this.gettext('None'));
+        };
+        updateButtonLabel();
+
+        const controller = new Gtk.EventControllerKey();
+        button.add_controller(controller);
+
+        let isRecording = false;
+
+        button.connect('clicked', () => {
+            isRecording = true;
+            button.set_label(this.gettext('New shortcut...'));
+            button.add_css_class('suggested-action');
+        });
+
+        controller.connect('key-pressed', (_controller: any, keyval: any, _keycode: any, state: any) => {
+            if (!isRecording) return false;
+
+            // Handle Escape to cancel
+            if (keyval === Gdk.KEY_Escape) {
+                isRecording = false;
+                button.remove_css_class('suggested-action');
+                updateButtonLabel();
+                return true;
+            }
+
+            // Handle Backspace to clear
+            if (keyval === Gdk.KEY_BackSpace) {
+                isRecording = false;
+                button.remove_css_class('suggested-action');
+                settings.set_strv(key, []);
+                updateButtonLabel();
+                return true;
+            }
+
+            // Mask out unwanted modifiers (like NumLock)
+            const mask = state & Gtk.accelerator_get_default_mod_mask();
+            
+            // Only accept if at least one modifier is pressed OR it's a function key
+            const isModifier = [
+                Gdk.KEY_Shift_L, Gdk.KEY_Shift_R,
+                Gdk.KEY_Control_L, Gdk.KEY_Control_R,
+                Gdk.KEY_Alt_L, Gdk.KEY_Alt_R,
+                Gdk.KEY_Meta_L, Gdk.KEY_Meta_R,
+                Gdk.KEY_Super_L, Gdk.KEY_Super_R
+            ].includes(keyval);
+
+            if (isModifier) return true;
+
+            const accel = Gtk.accelerator_name(keyval, mask);
+            if (accel) {
+                settings.set_strv(key, [accel]);
+                isRecording = false;
+                button.remove_css_class('suggested-action');
+                updateButtonLabel();
+                return true;
+            }
+
+            return false;
+        });
+
+        // Reset state if focus is lost
+        button.connect('state-flags-changed', () => {
+            if (isRecording && !button.has_focus) {
+                isRecording = false;
+                button.remove_css_class('suggested-action');
+                updateButtonLabel();
             }
         });
-        privacyGroup.add(shortcutRow);
+
+        return row;
     }
 }
