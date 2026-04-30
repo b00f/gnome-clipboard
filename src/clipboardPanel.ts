@@ -1,421 +1,136 @@
-import St from 'gi://St';
-import GObject from 'gi://GObject';
-import Meta from 'gi://Meta';
-import Shell from 'gi://Shell';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
-import Clutter from 'gi://Clutter';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import St from 'gi://St';
+import GObject from 'gi://GObject';
 
-import * as Store from './store.js';
-import * as Settings from './settings.js';
-import * as HistoryMenu from './historyMenu.js';
 import * as History from './history.js';
-import * as SearchBox from './searchBox.js';
-import * as ActionBar from './actionBar.js';
-import * as utils from './utils.js';
-import * as log from './log.js';
+import * as HistoryMenu from './historyMenu.js';
+import * as Settings from './settings.js';
 import * as ClipboardItem from './clipboardItem.js';
+import * as Store from './store.js';
+import * as log from './log.js';
+import * as utils from './utils.js';
 import * as ConfirmDialog from './confirmDialog.js';
-
-// GNOME 45+ uses GLib.timeout_add instead of Mainloop
-// const Mainloop = imports.mainloop; // Not needed anymore
+import * as ActionBar from './actionBar.js';
 
 let _ = (s: string) => s;
 
-export class ClipboardPanel
-  extends PanelMenu.Button {
+export function init(gettextFunc: (s: string) => string) {
+    _ = gettextFunc;
+}
 
-  private _clipboardTimerID = 0;
-  private _selectionOwnerChangedID = 0;
-  private _openStateChangedID = 0;
-  private _keyPressEventID = 0;
-  private _settingsChangedID = 0;
-  private _saveTimerID = 0;
-  private _refreshTimerID = 0;
-  private _selection: any;
+class ClipboardPanelInternal extends PanelMenu.Button {
   private _history: History.History;
   private _historyMenu: HistoryMenu.HistoryMenu;
   private _settings: Settings.ExtensionSettings;
   private _actionBar: ActionBar.ActionBar;
-  private _searchBox: SearchBox.SearchBox;
+  private _store: Store.Store;
+  private _openPrefs: () => void;
+  
+  private _clipboardTimerID: number = 0;
+  private _saveTimerID: number = 0;
   private _selectedID: number = 0;
-  private store: Store.Store;
-  private _legacyStorePath: string = "";
-  private _openPrefsCallback: (() => void) | null = null;
 
-  static {
-    GObject.registerClass(this);
-  }
-
-  constructor(settings: any, gettextFunc: (s: string) => string, uuid: string, openPrefsCallback: () => void) {
-    // super(menuAlignment, nameText, dontCreateMenu)
-    super(1.0, gettextFunc('Gnome Clipboard'), false);
-    _ = gettextFunc;
-    this._openPrefsCallback = openPrefsCallback;
+  constructor(settings: any, _gettext: any, uuid: string, openPrefs: () => void) {
+    super(0.0, _("Clipboard"), false);
 
     log.info("initializing ...");
     this._history = new History.History();
-    
-    this._selection = Shell.Global.get().get_display().get_selection();
     this._settings = new Settings.ExtensionSettings(settings);
+    this._openPrefs = openPrefs;
 
     let path = GLib.get_user_data_dir() + '/' + uuid;
-    this._legacyStorePath = GLib.get_user_cache_dir() + '/' + uuid;
-    this.store = new Store.Store(path);
-
-    let clipboardIcon = new St.Icon({
-      icon_name: 'edit-copy-symbolic',
-      style_class: 'popup-menu-icon'
-    });
-    this.add_child(clipboardIcon);
-
-    this._historyMenu = new HistoryMenu.HistoryMenu(
-      this._onActivateItem.bind(this),
-      this._onPinItem.bind(this),
-      this._onRemoveItem.bind(this),
-    );
-
-    this._searchBox = new SearchBox.SearchBox();
+    this._store = new Store.Store(path);
 
     this._actionBar = new ActionBar.ActionBar();
-    ActionBar.init(_);
-    HistoryMenu.init(_);
-    SearchBox.init(_);
-    ConfirmDialog.init(_);
-
-    this._setupMenu();
-    this._setupListener();
-
-    this._settingsChangedID = this._settings.onChanged(this._onSettingsChanged.bind(this));
-
-    this._openStateChangedID = this._historyMenu.connect('open-state-changed',
-      (_widget: any, open: boolean) => {
-        log.info(`open-state-changed event: ${open}`);
-        if (open) {
-          this._startRefreshTimer();
-          GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
-            this._searchBox.setText('');
-            global.stage.set_key_focus(this._searchBox.searchEntry);
-            return GLib.SOURCE_REMOVE;
-          });
-        } else {
-          this._stopRefreshTimer();
-        }
-      });
-
-    this._keyPressEventID = this._historyMenu.scrollView.connect('key-press-event',
-      (_widget: any, _event: any) => {
-        log.debug("key-press event");
-        global.stage.set_key_focus(this._searchBox.searchEntry);
-        return Clutter.EVENT_PROPAGATE;
-      });
-
-    this._actionBar.onClearHistory(() => {
-      this._onClearHistory();
-    });
-
-    this._actionBar.onOpenSettings(() => {
-      if (this._openPrefsCallback) {
-        this._openPrefsCallback();
-      }
-    });
-
-    this._actionBar.onPin(() => {
-      this._onPinCurrentItem();
-    });
-
-    this._actionBar.onTogglePrivateMode(() => {
-      let current = this._settings.privateMode();
-      this._settings.setPrivateMode(!current);
-    });
-
-    this._actionBar.onNextItem(() => {
-      this._selectNextItem();
-    });
-
-    this._actionBar.onPrevItem(() => {
-      this._selectPrevItem();
-    });
-
-    this._searchBox.onTextChanged(this._onSearch.bind(this));
-  }
-
-  public async init() {
-    log.info("async init starting...");
-    let history = await this.store.load();
-
-    if (history.length === 0) {
-      const legacyStore = new Store.Store(this._legacyStorePath);
-      const legacyHistory = await legacyStore.load();
-      if (legacyHistory.length > 0) {
-        log.info(`Final data type: ${typeof legacyHistory}, constructor: ${legacyHistory ? legacyHistory.constructor.name : 'null'}`);
-        history = legacyHistory;
-        await this.store.save(history);
-      }
-    }
-
-    this._loadHistory(history);
-    this._checkClipboard();
-  }
-
-  private _setupMenu() {
-    this.menu.box.add_style_class_name('gnome-clipboard');
-
-    this.menu.addMenuItem(this._searchBox);
+    this._historyMenu = new HistoryMenu.HistoryMenu(
+        this._copyToClipboard.bind(this),
+        this._onPinItem.bind(this),
+        this._onRemoveItem.bind(this)
+    );
+    
+    this.menu.addMenuItem(this._actionBar);
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     this.menu.addMenuItem(this._historyMenu);
-    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-    this.menu.addMenuItem(this._actionBar);
+
+    this._setupUI();
+    this._loadHistory();
+    this._setupClipboardMonitoring();
   }
 
-  private _onRemoveItem(item: ClipboardItem.ClipboardItem) {
-    this._history.delete(item.id());
+  public init() {
+      // Compatibility with extension.ts
   }
 
-  private _onPinItem(item: ClipboardItem.ClipboardItem) {
-    log.debug(`pin ${item.display()}`);
+  public toggle() {
+      this.menu.toggle();
+  }
 
-    item.pinned = !item.pinned;
-
-    GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
-      this._rebuildMenu();
-      return GLib.SOURCE_REMOVE;
+  private _setupUI() {
+    let icon = new St.Icon({
+      icon_name: 'edit-paste-symbolic',
+      style_class: 'system-status-icon'
     });
+    this.add_child(icon);
+
+    this._actionBar.onClearHistory(this.clearHistory.bind(this));
+    this._actionBar.onNextItem(this.selectNextItem.bind(this));
+    this._actionBar.onPrevItem(this.selectPrevItem.bind(this));
+    this._actionBar.onTogglePrivateMode(this.togglePrivateMode.bind(this));
+    this._actionBar.onOpenSettings(() => this._openPrefs());
   }
 
-  private _onPinCurrentItem() {
-    let item = this._history.get(this._selectedID);
-    if (item) {
-      this._onPinItem(item);
+  private async _loadHistory() {
+    let history = await this._store.load();
+    if (history && history.length > 0) {
+        this._history.setItems(history);
+        this._rebuildMenu();
     }
   }
 
-  private async _onActivateItem(item: ClipboardItem.ClipboardItem) {
-    log.debug(`update clipboard: ${item.display()} usage: ${item.usage}`);
-
-    await this._copyToClipboard(item);
-    this.toggle();
-  }
-  
-  private _onSettingsChanged() {
-    log.info("settings changed");
-
-    this._actionBar.setPrivateMode(this._settings.privateMode());
-    this._setupListener();
-    this._rebuildMenu();
-    this._saveHistoryDebounced();
-  }
-
-  private _onSearch() {
-    let query = this._searchBox.getText().toLowerCase();
-    this._historyMenu.filterItems(query);
-  }
-
-  private addClipboard(text: string): boolean {
-    if (text === null || text.length === 0) {
-      return false;
-    }
-
-    let id = utils.hashCode(text);
-    this._addToHistory(text);
-    
-    if (id == this._selectedID) {
-      // Even if it's the same item, we might need to rebuild if sort order changed or to refresh timestamp
-      return true; 
-    }
-
-    this._selectedID = id;
-    return true;
-  }
-
-  private async _selectPrevItem() {
-    let item = this._historyMenu.prevItem();
-    if (item) {
-      this._selectedID = item.id();
-      this._historyMenu.scrollToItem(this._selectedID);
-      await this._copyToClipboard(item);
-    }
-  }
-
-  private async _selectNextItem() {
-    let item = this._historyMenu.nextItem();
-    if (item) {
-      this._selectedID = item.id();
-      this._historyMenu.scrollToItem(this._selectedID);
-      await this._copyToClipboard(item);
-    }
-  }
-
-  private _addToHistory(text: string, usage = 1, pinned = false,
-    copiedAt = Date.now(), usedAt = Date.now(), 
-    type: ClipboardItem.ClipboardItemType = ClipboardItem.ClipboardItemType.TEXT,
-    imagePath: string | null = null) {
-    
-    let id = type === ClipboardItem.ClipboardItemType.IMAGE ? utils.hashCode(imagePath || "") : utils.hashCode(text);
-    let item = this._history.get(id);
-    if (item === undefined) {
-      item = new ClipboardItem.ClipboardItem(
-        text, usage, pinned, copiedAt, usedAt, type, imagePath
-      );
-
-      this._history.set(item);
-    } else {
-      item.updateLastUsed();
-    }
-
-    log.debug(`added '${item.display()}' usage: ${item.usage}`);
-  }
-
-  private _rebuildMenu() {
-    this._history.trim(this._settings.historySize());
-
-    let sorted = this._history.getSorted(this._settings.historySort());
-    this._historyMenu.rebuildMenu(sorted, this._selectedID);
-    this._onSearch();
-
-    this._actionBar.enablePrevButton(this._historyMenu.hasPrevItem());
-    this._actionBar.enableNextButton(this._historyMenu.hasNextItem());
-  }
-
-  private _setupListener() {
-    this._disconnectClipboardTimer();
-    this._disconnectSelectionOwnerChanged();
-
-    let useTimer = this._settings.clipboardTimer();
-    if (useTimer || useTimer === undefined) {
-      let interval = this._settings.clipboardTimerIntervalInMillisecond();
-      if (!interval || interval < 100) {
-        interval = 1000;
-      }
-      log.info(`set timer every ${interval} ms`);
-
-      this._clipboardTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval, () => {
+  private _setupClipboardMonitoring() {
+    this._clipboardTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
         this._checkClipboard();
         return GLib.SOURCE_CONTINUE;
-      });
-    } else {
-      let selection = Shell.Global.get().get_display().get_selection();
-      this._selectionOwnerChangedID = selection.connect('owner-changed',
-        (_selection: any, selectionType: any) => {
-          if (selectionType === Meta.SelectionType.SELECTION_CLIPBOARD) {
-            this._checkClipboard();
-          }
-        });
-    }
+    });
   }
 
   private _checkClipboard() {
-    if (!this._actionBar.enable() || this._settings.privateMode()) {
-      return;
-    }
+    if (!this._actionBar.enable() || this._settings.privateMode()) return;
 
-    let tracker = Shell.WindowTracker.get_default();
-    let app = tracker.focus_app;
-    if (app) {
-        let appId = app.get_id();
-        let blacklist = this._settings.blacklist();
-        if (appId && blacklist.includes(appId)) {
-            log.info(`skipping blacklisted app: ${appId}`);
-            return;
-        }
-    }
-
-    // Use a small delay to ensure the clipboard content is ready
-    GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
-        this._selection.get_mimetypes(Meta.SelectionType.SELECTION_CLIPBOARD, (selection: any, res: any) => {
-            try {
-                let mimetypes = selection.get_mimetypes_finish(res);
-                let bestMime = this._findBestTextMime(mimetypes);
-                
-                if (bestMime) {
-                    log.info(`Found best text mime: ${bestMime}`);
-                    selection.get_text(Meta.SelectionType.SELECTION_CLIPBOARD, bestMime, null, (selection: any, res: any) => {
-                        try {
-                            let result = selection.get_text_finish(res);
-                            let text = this._safeDecode(result);
-                            
-                            if (text && text.trim().length > 0) {
-                                log.info(`Captured text content: ${text.substring(0, 30)}...`);
-                                if (this.addClipboard(text)) {
-                                    this._rebuildMenu();
-                                    this._saveHistoryDebounced();
-                                }
-                            } else {
-                                this._checkImageClipboard();
-                            }
-                        } catch (e) {
-                            log.error(`Failed to get text content: ${e}`);
-                            this._checkImageClipboard();
-                        }
-                    });
-                } else {
-                    this._checkImageClipboard();
+    const ST = (St as any);
+    const clipboard = ST['Clipboard']['get_default']();
+    
+    clipboard.get_text(ST['ClipboardType']['CLIPBOARD'], (_cb: any, text: string) => {
+        try {
+            if (text && text.trim().length > 0) {
+                if (this._addClipboard(text)) {
+                    this._rebuildMenu();
+                    this._saveHistoryDebounced();
                 }
-            } catch (e) {
-                log.error(`Failed to handle clipboard: ${e}`);
+            } else {
                 this._checkImageClipboard();
             }
-        });
-        return GLib.SOURCE_REMOVE;
+        } catch (e) {
+            log.error(`Check clipboard failed: ${e}`);
+        }
     });
   }
 
-  private _findBestTextMime(mimetypes: string[]): string | null {
-      if (!mimetypes) return null;
-      const textMimes = ['UTF8_STRING', 'text/plain;charset=utf-8', 'text/plain', 'STRING', 'TEXT'];
-      for (let mime of textMimes) {
-          if (mimetypes.includes(mime)) return mime;
-      }
-      return null;
-  }
-
-  private _safeDecode(data: any): string {
-      if (!data) return "";
-      try {
-          // Try standard TextDecoder with safety wrapper
-          const ui8 = data instanceof Uint8Array ? data : new Uint8Array(data);
-          return new TextDecoder().decode(ui8);
-      } catch (e) {
-          log.warn(`TextDecoder failed, using fallback: ${e}`);
-          let text = "";
-          let bytes = data;
-          if (data && typeof data.get_data === 'function') {
-              bytes = data.get_data();
-          }
-          if (bytes && bytes.length) {
-              for (let i = 0; i < bytes.length; i++) {
-                  text += String.fromCharCode(bytes[i]);
-              }
-          }
-          return text;
-      }
-  }
-
   private _checkImageClipboard() {
-    this._selection.get_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/png', null, (selection: any, res: any) => {
+    const ST = (St as any);
+    const clipboard = ST['Clipboard']['get_default']();
+    
+    clipboard.get_content(ST['ClipboardType']['CLIPBOARD'], 'image/png', (_cb: any, bytes: any) => {
         try {
-            let bytes = selection.get_content_finish(res);
             if (bytes && bytes.get_size() > 0) {
-                log.info("Captured image content (image/png)");
                 this._processImageBytes(bytes);
-            } else {
-                // Try JPEG
-                this._selection.get_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/jpeg', null, (selection: any, res: any) => {
-                    try {
-                        let bytes = selection.get_content_finish(res);
-                        if (bytes && bytes.get_size() > 0) {
-                            log.info("Captured image content (image/jpeg)");
-                            this._processImageBytes(bytes);
-                        }
-                    } catch (e) {}
-                });
             }
-        } catch (e) {
-            log.error(`Failed to handle image clipboard: ${e}`);
-        }
+        } catch (e) {}
     });
   }
 
@@ -423,7 +138,7 @@ export class ClipboardPanel
     let id = utils.hashBytes(bytes);
     if (id == this._selectedID) return;
     
-    let path = await this.store.saveImage(id, bytes);
+    let path = await this._store.saveImage(id, bytes);
     if (path) {
         this._selectedID = id;
         this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
@@ -432,30 +147,38 @@ export class ClipboardPanel
     }
   }
 
+  private _addClipboard(text: string): boolean {
+    let id = utils.hashCode(text);
+    if (id == this._selectedID) return false;
+
+    this._selectedID = id;
+    return this._addToHistory(text, 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.TEXT);
+  }
+
+  private _addToHistory(text: string, count: number, pinned: boolean, created: number, updated: number, type: number, path?: string): boolean {
+    let item = new ClipboardItem.ClipboardItem(text, count, pinned, created, updated, type, path);
+    return this._history.add(item);
+  }
+
   private async _copyToClipboard(item: ClipboardItem.ClipboardItem) {
+    const ST = (St as any);
+    const clipboard = ST['Clipboard']['get_default']();
+
     if (item.type === ClipboardItem.ClipboardItemType.IMAGE && item.imagePath) {
         let file = Gio.file_new_for_path(item.imagePath);
-        
-        try {
-            const [contents] = await new Promise<any>((resolve, reject) => {
-                file.load_contents_async(null, (file: any, res: any) => {
-                    try {
-                        resolve(file.load_contents_finish(res));
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-            });
-            
-            if (contents) {
-                let bytes = GLib.Bytes.new(contents);
-                this._selection.set_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/png', bytes);
+        file.load_contents_async(null, (_f: any, res: any) => {
+            try {
+                let [contents] = file.load_contents_finish(res);
+                if (contents) {
+                    let bytes = GLib.Bytes.new(contents);
+                    clipboard.set_content(ST['ClipboardType']['CLIPBOARD'], 'image/png', bytes);
+                }
+            } catch (e) {
+                log.error(`Failed to load image for copy: ${e}`);
             }
-        } catch (e) {
-            log.error(`failed to load image for clipboard: ${e}`);
-        }
+        });
     } else {
-        this._selection.set_text(Meta.SelectionType.SELECTION_CLIPBOARD, 'text/plain', item.text);
+        clipboard.set_text(ST['ClipboardType']['CLIPBOARD'], item.text);
     }
     
     this._selectedID = item.id();
@@ -466,135 +189,70 @@ export class ClipboardPanel
     }
   }
 
-  private _onClearHistory() {
-    const title = _("Clear history?");
-    const message = _("Are you sure you want to remove all items?");
-    const sub_message = _("This operation cannot be undone.");
+  public toggleService() {
+      // Manual toggle via switch in ActionBar is handled there
+  }
 
-    ConfirmDialog.openConfirmDialog(title, message, sub_message, this._doClearHistory.bind(this), _("Empty"));
+  public clearHistory() {
+      const title = _("Clear history?");
+      const message = _("Are you sure you want to remove all items?");
+      ConfirmDialog.openConfirmDialog(title, message, "", this._doClearHistory.bind(this), _("Empty"));
+  }
+
+  public togglePrivateMode() {
+      this._settings.setPrivateMode(!this._settings.privateMode());
+      this._actionBar.setPrivateMode(this._settings.privateMode());
+  }
+
+  public selectNextItem() {
+      const next = this._historyMenu.nextItem();
+      if (next) this._copyToClipboard(next);
+  }
+
+  public selectPrevItem() {
+      const prev = this._historyMenu.prevItem();
+      if (prev) this._copyToClipboard(prev);
+  }
+
+  private _rebuildMenu() {
+    this._historyMenu.rebuildMenu(this._history.getSorted(this._settings.historySort()), this._selectedID);
+  }
+
+  private _onPinItem(item: ClipboardItem.ClipboardItem) {
+      item.pinned = !item.pinned;
+      this._rebuildMenu();
+      this._saveHistoryDebounced();
+  }
+
+  private _onRemoveItem(item: ClipboardItem.ClipboardItem) {
+      this._history.delete(item.id());
+      this._rebuildMenu();
+      this._saveHistoryDebounced();
+  }
+
+  private _saveHistoryDebounced() {
+    if (this._saveTimerID) GLib.source_remove(this._saveTimerID);
+    this._saveTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+        this._store.save(this._history.getItems());
+        this._saveTimerID = 0;
+        return GLib.SOURCE_REMOVE;
+    });
   }
 
   private _doClearHistory(){
     this._history.clear();
-    this._saveHistory();
+    this._store.save([]);
     this._rebuildMenu();
   }
 
-  private _disconnectClipboardTimer() {
-    if (this._clipboardTimerID) {
-      GLib.source_remove(this._clipboardTimerID);
-      this._clipboardTimerID = 0;
-    }
-  }
-
-  private _disconnectSelectionOwnerChanged() {
-    if (this._selectionOwnerChangedID) {
-      let selection = Shell.Global.get().get_display().get_selection();
-      selection.disconnect(this._selectionOwnerChangedID);
-      this._selectionOwnerChangedID = 0;
-    }
-  }
-
-  private _loadHistory(history: any) {
-    history.forEach((value: any) => {
-      this._addToHistory(
-        value.text,
-        value.usage,
-        value.pinned,
-        value.copiedAt,
-        value.usedAt,
-        value.type || ClipboardItem.ClipboardItemType.TEXT,
-        value.imagePath || null
-      );
-    });
-
-    this._rebuildMenu();
-  }
-
-  private async _saveHistory() {
-    let items = this._history.items(this._settings.savePinned());
-    await this.store.save(items);
-  }
-
-  private _saveHistoryDebounced() {
-    if (this._saveTimerID) {
-      GLib.source_remove(this._saveTimerID);
-    }
-    this._saveTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
-      this._saveHistory();
-      this._saveTimerID = 0;
-      return GLib.SOURCE_REMOVE;
-    });
-  }
-
-  private _startRefreshTimer() {
-      this._stopRefreshTimer();
-      // Refresh every minute to update relative timestamps
-      this._refreshTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 60000, () => {
-          this._updateRelativeTimes();
-          return GLib.SOURCE_CONTINUE;
-      });
-  }
-
-  private _stopRefreshTimer() {
-      if (this._refreshTimerID) {
-          GLib.source_remove(this._refreshTimerID);
-          this._refreshTimerID = 0;
-      }
-  }
-
-  private _updateRelativeTimes() {
-      log.debug("refreshing relative times");
-      this._historyMenu.updateItemsUI();
-  }
-
-  public toggle() {
-    this.menu.toggle();
-  }
-
-  public clearHistory() {
-    this._onClearHistory();
-  }
-
-  public togglePrivateMode() {
-    let current = this._settings.privateMode();
-    this._settings.setPrivateMode(!current);
-  }
-
-  public selectNextItem() {
-    this._selectNextItem();
-  }
-
-  public selectPrevItem() {
-    this._selectPrevItem();
-  }
-
-  public destroy() {
-    this._disconnectClipboardTimer();
-    this._disconnectSelectionOwnerChanged();
-    this._stopRefreshTimer();
-
-    if (this._openStateChangedID) {
-      this._historyMenu.disconnect(this._openStateChangedID);
-      this._openStateChangedID = 0;
-    }
-
-    if (this._keyPressEventID) {
-      this._historyMenu.scrollView.disconnect(this._keyPressEventID);
-      this._keyPressEventID = 0;
-    }
-
-    if (this._settingsChangedID) {
-      this._settings.getSettings().disconnect(this._settingsChangedID);
-      this._settingsChangedID = 0;
-    }
-
-    if (this._saveTimerID) {
-      GLib.source_remove(this._saveTimerID);
-      this._saveTimerID = 0;
-      this._saveHistory();
-    }
-
+  destroy() {
+    if (this._clipboardTimerID) GLib.source_remove(this._clipboardTimerID);
+    if (this._saveTimerID) GLib.source_remove(this._saveTimerID);
     super.destroy();
   }
 }
+
+export interface ClipboardPanel extends ClipboardPanelInternal {}
+export var ClipboardPanel = GObject.registerClass({
+    GTypeName: 'ClipboardPanel'
+}, ClipboardPanelInternal);

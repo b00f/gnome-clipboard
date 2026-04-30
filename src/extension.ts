@@ -17,6 +17,7 @@ export default class GnomeClipboardExtension extends Extension {
         log.init(this.getSettings(Settings.SCHEMA_ID));
 
         if (!this._panel) {
+            ClipboardPanel.init(this.gettext.bind(this));
             this._panel = new ClipboardPanel.ClipboardPanel(
                 this.getSettings(Settings.SCHEMA_ID),
                 this.gettext.bind(this),
@@ -24,7 +25,7 @@ export default class GnomeClipboardExtension extends Extension {
                 () => this.openPreferences()
             );
             Main.panel.addToStatusArea(this.uuid, this._panel);
-            this._panel.init();
+            if (this._panel) this._panel.init();
         }
 
         this._addKeybinding();
