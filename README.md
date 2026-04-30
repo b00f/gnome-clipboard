@@ -23,15 +23,15 @@ A professional, feature-rich GNOME Shell extension for managing your clipboard h
 
 You can customize Gnome Clipboard to fit your workflow perfectly using the extension's preferences window.
 
-| Setting | Description | Default |
-| :--- | :--- | :--- |
-| **History Size** | The maximum number of items to keep in the recent history. | `100` |
-| **History Sort** | Choose how to sort your history (e.g., by usage or time). | `By Time` |
-| **Timer vs Event** | Choose whether to poll the clipboard on a timer or use system events. | `Events` |
-| **Save Pinned Only**| If enabled, only pinned items are saved to disk; recent items are forgotten on reboot. | `false` |
-| **Notifications** | Toggle desktop notifications when an item is copied or pinned. | `false` |
-| **Blacklist** | A list of application classes/names whose clipboard events will be ignored. | `[]` |
-| **Keyboard Shortcut**| Set a global shortcut to open the clipboard menu. | `<Super>v` |
+| Setting               | Description                                                                            | Default    |
+| :-------------------- | :------------------------------------------------------------------------------------- | :--------- |
+| **History Size**      | The maximum number of items to keep in the recent history.                             | `100`      |
+| **History Sort**      | Choose how to sort your history (e.g., by usage or time).                              | `By Time`  |
+| **Timer vs Event**    | Choose whether to poll the clipboard on a timer or use system events.                  | `Events`   |
+| **Save Pinned Only**  | If enabled, only pinned items are saved to disk; recent items are forgotten on reboot. | `false`    |
+| **Notifications**     | Toggle desktop notifications when an item is copied or pinned.                         | `false`    |
+| **Blacklist**         | A list of application classes/names whose clipboard events will be ignored.            | `[]`       |
+| **Keyboard Shortcut** | Set a global shortcut to open the clipboard menu.                                      | `<Super>v` |
 
 ## 🚀 Installation
 
@@ -77,7 +77,7 @@ Before compiling, ensure you have the following installed on your system:
    For the extension to be recognized, you must restart the GNOME Shell.
    - **X11**: Press `Alt` + `F2`, type `r`, and press `Enter`.
    - **Wayland**: You must log out and log back in.
-   
+
    Alternatively, you can run our automated script which detects your session type:
    ```bash
    make restart-shell
