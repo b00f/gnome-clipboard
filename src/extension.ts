@@ -24,6 +24,7 @@ export default class GnomeClipboardExtension extends Extension {
                 () => this.openPreferences()
             );
             Main.panel.addToStatusArea(this.uuid, this._panel);
+            this._panel.init();
         }
 
         this._addKeybinding();

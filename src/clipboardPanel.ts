@@ -37,7 +37,7 @@ export class ClipboardPanel
   private _settings: Settings.ExtensionSettings;
   private _actionBar: ActionBar.ActionBar;
   private _searchBox: SearchBox.SearchBox;
-  private _clipboard: any;
+  private _selection: any;
   private _selectedID: number = 0;
   private store: Store.Store;
   private _openPrefsCallback: (() => void) | null = null;
@@ -54,7 +54,9 @@ export class ClipboardPanel
 
     log.info("initializing ...");
     this._history = new History.History();
-    this._clipboard = St.Clipboard.get_default();
+    
+    // Use Meta.Selection for clipboard access (modern Wayland-compatible way)
+    this._selection = Shell.Global.get().get_display().get_selection();
     this._settings = new Settings.ExtensionSettings(settings);
 
     let path = GLib.get_user_cache_dir() + '/' + uuid;
@@ -83,7 +85,6 @@ export class ClipboardPanel
     this._setupMenu();
     this._setupListener();
 
-    this._loadHistory(this.store.load());
     this._settings.onChanged(this._onSettingsChanged.bind(this));
 
     this._openStateChangedID = this._historyMenu.connect('open-state-changed',
@@ -135,6 +136,12 @@ export class ClipboardPanel
     this._searchBox.onTextChanged(this._onSearch.bind(this));
   }
 
+  public async init() {
+    log.info("async init starting...");
+    const history = await this.store.load();
+    this._loadHistory(history);
+  }
+
   private _setupMenu() {
     this.menu.box.add_style_class_name('gnome-clipboard');
 
@@ -167,10 +174,10 @@ export class ClipboardPanel
     }
   }
 
-  private _onActivateItem(item: ClipboardItem.ClipboardItem) {
+  private async _onActivateItem(item: ClipboardItem.ClipboardItem) {
     log.debug(`update clipboard: ${item.display()} usage: ${item.usage}`);
 
-    this._copyToClipboard(item);
+    await this._copyToClipboard(item);
     this.toggle();
   }
   
@@ -204,17 +211,17 @@ export class ClipboardPanel
     return true;
   }
 
-  private _selectPrevItem() {
+  private async _selectPrevItem() {
     let item = this._historyMenu.prevItem();
     if (item) {
-      this._copyToClipboard(item);
+      await this._copyToClipboard(item);
     }
   }
 
-  private _selectNextItem() {
+  private async _selectNextItem() {
     let item = this._historyMenu.nextItem();
     if (item) {
-      this._copyToClipboard(item);
+      await this._copyToClipboard(item);
     }
   }
 
@@ -288,45 +295,68 @@ export class ClipboardPanel
         }
     }
 
-    this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_clipboard: any, text: string) => {
-      if (text && text.length > 0) {
-        log.info(`set clipboard text content: ${text}`);
-        if (this.addClipboard(text)) {
-          this._rebuildMenu();
-          this._saveHistory();
-        }
-      } else {
-        // Try image
-        this._clipboard.get_content(St.ClipboardType.CLIPBOARD, 'image/png', (_clipboard: any, bytes: any) => {
-          if (bytes) {
-            let id = utils.hashBytes(bytes);
-            if (id == this._selectedID) return;
-            
-            log.info("set clipboard image content");
-            let path = this.store.saveImage(id, bytes);
-            if (path) {
-              this._selectedID = id;
-              this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
-              this._rebuildMenu();
-              this._saveHistory();
-            }
+    this._selection.get_text(Meta.SelectionType.SELECTION_CLIPBOARD, "text/plain", null, async (selection: any, res: any) => {
+      try {
+        let text = selection.get_text_finish(res);
+        if (text && text.length > 0) {
+          log.info(`set clipboard text content: ${text}`);
+          if (this.addClipboard(text)) {
+            this._rebuildMenu();
+            await this._saveHistory();
           }
-        });
+        } else {
+          // Try image
+          this._selection.get_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/png', null, async (selection: any, res: any) => {
+            try {
+              let bytes = selection.get_content_finish(res);
+              if (bytes) {
+                let id = utils.hashBytes(bytes);
+                if (id == this._selectedID) return;
+                
+                log.info("set clipboard image content");
+                let path = await this.store.saveImage(id, bytes);
+                if (path) {
+                  this._selectedID = id;
+                  this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
+                  this._rebuildMenu();
+                  await this._saveHistory();
+                }
+              }
+            } catch (e) {
+              log.error(`failed to get image content: ${e}`);
+            }
+          });
+        }
+      } catch (e) {
+        log.error(`failed to get clipboard text: ${e}`);
       }
     });
   }
 
-  private _copyToClipboard(item: ClipboardItem.ClipboardItem) {
+  private async _copyToClipboard(item: ClipboardItem.ClipboardItem) {
     if (item.type === ClipboardItem.ClipboardItemType.IMAGE && item.imagePath) {
         let file = Gio.file_new_for_path(item.imagePath);
-        let [success, contents] = file.load_contents(null);
-        if (success) {
-            // St.Clipboard.set_content expects GLib.Bytes in modern GNOME
-            let bytes = GLib.Bytes.new(contents);
-            this._clipboard.set_content(St.ClipboardType.CLIPBOARD, 'image/png', bytes);
+        
+        try {
+            const [contents] = await new Promise<any>((resolve, reject) => {
+                file.load_contents_async(null, (file: any, res: any) => {
+                    try {
+                        resolve(file.load_contents_finish(res));
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            });
+            
+            if (contents) {
+                let bytes = GLib.Bytes.new(contents);
+                this._selection.set_content(Meta.SelectionType.SELECTION_CLIPBOARD, 'image/png', bytes);
+            }
+        } catch (e) {
+            log.error(`failed to load image for clipboard: ${e}`);
         }
     } else {
-        this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.text);
+        this._selection.set_text(Meta.SelectionType.SELECTION_CLIPBOARD, item.text);
     }
     
     this._selectedID = item.id();
@@ -382,9 +412,9 @@ export class ClipboardPanel
     this._rebuildMenu();
   }
 
-  private _saveHistory() {
+  private async _saveHistory() {
     let items = this._history.items(this._settings.savePinned());
-    this.store.save(items);
+    await this.store.save(items);
   }
 
   public toggle() {

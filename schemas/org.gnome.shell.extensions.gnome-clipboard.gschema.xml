@@ -44,7 +44,7 @@
     </key>
 
     <key type="as" name="shortcut-menu">
-      <default>['&lt;Super&gt;v']</default>
+      <default>[]</default>
       <summary>Keyboard shortcut to open menu</summary>
     </key>
 

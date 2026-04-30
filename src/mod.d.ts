@@ -54,7 +54,7 @@ declare module 'resource:///org/gnome/shell/ui/popupMenu.js' {
         setOrnament(ornament: any): void;
         _ornamentLabel: any;
     }
-    export class PopupSeparatorMenuItem extends PopupBaseMenuItem {}
+    export class PopupSeparatorMenuItem extends PopupBaseMenuItem { }
     export class PopupSwitchMenuItem extends PopupBaseMenuItem {
         constructor(label: string, active: boolean, params?: any);
         state: boolean;
