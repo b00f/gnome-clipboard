@@ -142,7 +142,7 @@ export default class GnomeClipboardPreferences extends ExtensionPreferences {
         const blacklistRow = new Adw.EntryRow({
             title: this.gettext('Blacklisted App IDs'),
         });
-        
+
         const blacklistSettings = settings.get_strv(Settings.BLACKLIST).join(', ');
         blacklistRow.set_text(blacklistSettings);
         blacklistRow.connect('changed', () => {
@@ -171,7 +171,7 @@ export default class GnomeClipboardPreferences extends ExtensionPreferences {
 
     private _createShortcutRow(settings: Gio.Settings, key: string, title: string): Adw.ActionRow {
         const row = new Adw.ActionRow({ title });
-        
+
         const button = new Gtk.Button({
             valign: Gtk.Align.CENTER,
             has_frame: true,
@@ -217,7 +217,7 @@ export default class GnomeClipboardPreferences extends ExtensionPreferences {
 
             // Mask out unwanted modifiers (like NumLock)
             const mask = state & Gtk.accelerator_get_default_mod_mask();
-            
+
             // Only accept if at least one modifier is pressed OR it's a function key
             const isModifier = [
                 Gdk.KEY_Shift_L, Gdk.KEY_Shift_R,
