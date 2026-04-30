@@ -23,8 +23,8 @@ export class ExtensionSettings {
         this._settings = settings;
     }
 
-    onChanged(callback: () => void) {
-        this._settings.connect('changed', callback);
+    onChanged(callback: () => void): number {
+        return this._settings.connect('changed', callback);
     }
 
     historySize(): number {

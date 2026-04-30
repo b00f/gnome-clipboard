@@ -32,6 +32,8 @@ export class ClipboardPanel
   private _selectionOwnerChangedID = 0;
   private _openStateChangedID = 0;
   private _keyPressEventID = 0;
+  private _settingsChangedID = 0;
+  private _saveTimerID = 0;
   private _history: History.History;
   private _historyMenu: HistoryMenu.HistoryMenu;
   private _settings: Settings.ExtensionSettings;
@@ -85,7 +87,7 @@ export class ClipboardPanel
     this._setupMenu();
     this._setupListener();
 
-    this._settings.onChanged(this._onSettingsChanged.bind(this));
+    this._settingsChangedID = this._settings.onChanged(this._onSettingsChanged.bind(this));
 
     this._openStateChangedID = this._historyMenu.connect('open-state-changed',
       (_widget: any, open: boolean) => {
@@ -187,7 +189,7 @@ export class ClipboardPanel
     this._actionBar.setPrivateMode(this._settings.privateMode());
     this._setupListener();
     this._rebuildMenu();
-    this._saveHistory();
+    this._saveHistoryDebounced();
   }
 
   private _onSearch() {
@@ -302,7 +304,7 @@ export class ClipboardPanel
           log.info(`set clipboard text content: ${text}`);
           if (this.addClipboard(text)) {
             this._rebuildMenu();
-            await this._saveHistory();
+            this._saveHistoryDebounced();
           }
         } else {
           // Try image
@@ -319,7 +321,7 @@ export class ClipboardPanel
                   this._selectedID = id;
                   this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
                   this._rebuildMenu();
-                  await this._saveHistory();
+                  this._saveHistoryDebounced();
                 }
               }
             } catch (e) {
@@ -417,6 +419,17 @@ export class ClipboardPanel
     await this.store.save(items);
   }
 
+  private _saveHistoryDebounced() {
+    if (this._saveTimerID) {
+      GLib.source_remove(this._saveTimerID);
+    }
+    this._saveTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+      this._saveHistory();
+      this._saveTimerID = 0;
+      return GLib.SOURCE_REMOVE;
+    });
+  }
+
   public toggle() {
     this.menu.toggle();
   }
@@ -433,6 +446,16 @@ export class ClipboardPanel
     if (this._keyPressEventID) {
       this._historyMenu.scrollView.disconnect(this._keyPressEventID);
       this._keyPressEventID = 0;
+    }
+
+    if (this._settingsChangedID) {
+      this._settings.getSettings().disconnect(this._settingsChangedID);
+      this._settingsChangedID = 0;
+    }
+
+    if (this._saveTimerID) {
+      GLib.source_remove(this._saveTimerID);
+      this._saveTimerID = 0;
     }
 
     super.destroy();

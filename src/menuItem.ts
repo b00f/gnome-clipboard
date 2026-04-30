@@ -10,6 +10,7 @@ export class MenuItem
   extends PopupMenu.PopupBaseMenuItem {
 
   public cbInfo: ClipboardItem.ClipboardItem;
+  private static _iconCache: Map<string, any> = new Map();
 
   static {
     GObject.registerClass(this);
@@ -45,8 +46,13 @@ export class MenuItem
     });
 
     if (cbInfo.type === ClipboardItem.ClipboardItemType.IMAGE && cbInfo.imagePath) {
-      let file = Gio.file_new_for_path(cbInfo.imagePath);
-      let gicon = Gio.Icon.new_for_string(file.get_path());
+      let gicon = MenuItem._iconCache.get(cbInfo.imagePath);
+      if (!gicon) {
+          let file = Gio.file_new_for_path(cbInfo.imagePath);
+          gicon = Gio.Icon.new_for_string(file.get_path());
+          MenuItem._iconCache.set(cbInfo.imagePath, gicon);
+      }
+      
       let icon = new St.Icon({
         gicon: gicon,
         icon_size: 64,
