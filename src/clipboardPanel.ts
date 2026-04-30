@@ -6,6 +6,7 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import St from 'gi://St';
 import GObject from 'gi://GObject';
+import Clutter from 'gi://Clutter';
 
 import * as History from './history.js';
 import * as HistoryMenu from './historyMenu.js';
@@ -16,6 +17,7 @@ import * as log from './log.js';
 import * as utils from './utils.js';
 import * as ConfirmDialog from './confirmDialog.js';
 import * as ActionBar from './actionBar.js';
+import * as SearchBox from './searchBox.js';
 
 let _ = (s: string) => s;
 
@@ -28,12 +30,16 @@ class ClipboardPanelInternal extends PanelMenu.Button {
   private _historyMenu: HistoryMenu.HistoryMenu;
   private _settings: Settings.ExtensionSettings;
   private _actionBar: ActionBar.ActionBar;
+  private _searchBox: SearchBox.SearchBox;
   private _store: Store.Store;
   private _openPrefs: () => void;
   
   private _clipboardTimerID: number = 0;
   private _saveTimerID: number = 0;
   private _selectedID: number = 0;
+  private _openStateChangedID: number = 0;
+  private _keyPressEventID: number = 0;
+  private _focusTimerID: number = 0;
 
   constructor(settings: any, _gettext: any, uuid: string, openPrefs: () => void) {
     super(0.0, _("Clipboard"), false);
@@ -47,15 +53,19 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     this._store = new Store.Store(path);
 
     this._actionBar = new ActionBar.ActionBar();
+    this._searchBox = new SearchBox.SearchBox();
     this._historyMenu = new HistoryMenu.HistoryMenu(
         this._copyToClipboard.bind(this),
         this._onPinItem.bind(this),
         this._onRemoveItem.bind(this)
     );
     
-    this.menu.addMenuItem(this._actionBar);
+    // Menu layout: Search → History → Action Bar
+    this.menu.addMenuItem(this._searchBox);
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     this.menu.addMenuItem(this._historyMenu);
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+    this.menu.addMenuItem(this._actionBar);
 
     this._setupUI();
     this._loadHistory();
@@ -71,6 +81,8 @@ class ClipboardPanelInternal extends PanelMenu.Button {
   }
 
   private _setupUI() {
+    this.menu.box.add_style_class_name('gnome-clipboard');
+
     let icon = new St.Icon({
       icon_name: 'edit-paste-symbolic',
       style_class: 'system-status-icon'
@@ -82,6 +94,30 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     this._actionBar.onPrevItem(this.selectPrevItem.bind(this));
     this._actionBar.onTogglePrivateMode(this.togglePrivateMode.bind(this));
     this._actionBar.onOpenSettings(() => this._openPrefs());
+
+    // Search box: filter items as user types
+    this._searchBox.onTextChanged(this._onSearch.bind(this));
+
+    // Auto-focus search box when menu opens
+    this._openStateChangedID = this.menu.connect('open-state-changed',
+      (_menu: any, open: boolean) => {
+        if (open) {
+          if (this._focusTimerID) GLib.source_remove(this._focusTimerID);
+          this._focusTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
+            this._searchBox.setText('');
+            global.stage.set_key_focus(this._searchBox.searchEntry);
+            this._focusTimerID = 0;
+            return GLib.SOURCE_REMOVE;
+          });
+        }
+      });
+
+    // Redirect key presses from scroll view to search box
+    this._keyPressEventID = this._historyMenu.scrollView.connect('key-press-event',
+      (_widget: any, _event: any) => {
+        global.stage.set_key_focus(this._searchBox.searchEntry);
+        return Clutter.EVENT_PROPAGATE;
+      });
   }
 
   private async _loadHistory() {
@@ -216,6 +252,14 @@ class ClipboardPanelInternal extends PanelMenu.Button {
 
   private _rebuildMenu() {
     this._historyMenu.rebuildMenu(this._history.getSorted(this._settings.historySort()), this._selectedID);
+    this._onSearch();
+    this._actionBar.enablePrevButton(this._historyMenu.hasPrevItem());
+    this._actionBar.enableNextButton(this._historyMenu.hasNextItem());
+  }
+
+  private _onSearch() {
+    let query = this._searchBox.getText().toLowerCase();
+    this._historyMenu.filterItems(query);
   }
 
   private _onPinItem(item: ClipboardItem.ClipboardItem) {
@@ -248,6 +292,18 @@ class ClipboardPanelInternal extends PanelMenu.Button {
   destroy() {
     if (this._clipboardTimerID) GLib.source_remove(this._clipboardTimerID);
     if (this._saveTimerID) GLib.source_remove(this._saveTimerID);
+    if (this._focusTimerID) GLib.source_remove(this._focusTimerID);
+
+    if (this._openStateChangedID) {
+      this.menu.disconnect(this._openStateChangedID);
+      this._openStateChangedID = 0;
+    }
+
+    if (this._keyPressEventID) {
+      this._historyMenu.scrollView.disconnect(this._keyPressEventID);
+      this._keyPressEventID = 0;
+    }
+
     super.destroy();
   }
 }

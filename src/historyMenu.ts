@@ -192,6 +192,25 @@ export class HistoryMenu
       }
   }
 
+  public filterItems(query: string) {
+      for (const [_id, item] of this._items) {
+          if (!query || query.length === 0) {
+              (item as any).actor?.show?.();
+              (item as any).show?.();
+          } else {
+              const text = item.cbInfo.text?.toLowerCase() ?? '';
+              const matches = text.includes(query);
+              if (matches) {
+                  (item as any).actor?.show?.();
+                  (item as any).show?.();
+              } else {
+                  (item as any).actor?.hide?.();
+                  (item as any).hide?.();
+              }
+          }
+      }
+  }
+
   private onActivateItem(item: MenuItem.MenuItem) {
     this._onActivateItem(item.cbInfo);
   }
