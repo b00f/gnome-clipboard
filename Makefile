@@ -29,7 +29,7 @@ NC = \033[0m # No Color
 TSC := $(shell command -v tsc 2> /dev/null || echo "npx -p typescript tsc")
 
 .PHONY: all build compile pack install enable disable clean update-translations listen test
- 
+
 all: build
 
 build: pack
