@@ -122,24 +122,3 @@ msgstr "Новое сочетание клавиш..."
 
 msgid "Search clipboard..."
 msgstr "Поиск..."
-
-#~ msgid "Copy time"
-#~ msgstr "Время копирования"
-
-#~ msgid "Enable"
-#~ msgstr "Включить"
-
-#~ msgid "Most usage"
-#~ msgstr "Часто используемые"
-
-#~ msgid "Recent usage"
-#~ msgstr "Недавно использованные"
-
-#~ msgid "Shortcuts"
-#~ msgstr "Сочетания клавиш"
-
-#~ msgid "This operation cannot be undone."
-#~ msgstr "Очищенные данные невозможно восстановить."
-
-#~ msgid "Type here to search..."
-#~ msgstr "Введите для поиска..."
