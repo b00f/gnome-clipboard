@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-clipboard\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-11 01:41+0800\n"
+"POT-Creation-Date: 2026-06-05 18:44+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,53 +17,107 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Are you sure you want to remove all items?"
+msgid "Previous Item"
 msgstr ""
 
-msgid "Cancel"
+msgid "Next Item"
 msgstr ""
 
-msgid "Clear history?"
+msgid "Private Mode"
+msgstr ""
+
+msgid "Pin Current Item"
+msgstr ""
+
+msgid "Clear History"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Service"
+msgstr ""
+
+msgid "Clipboard"
 msgstr ""
 
 msgid "Clipboard updated"
 msgstr ""
 
-msgid "Copy time"
+msgid "Clear history?"
+msgstr ""
+
+msgid "Are you sure you want to remove all items?"
 msgstr ""
 
 msgid "Empty"
 msgstr ""
 
-msgid "Enable"
-msgstr ""
-
-msgid "Gnome Clipboard"
-msgstr ""
-
-msgid "Maximum size of history:"
-msgstr ""
-
-msgid "Most usage"
+msgid "Cancel"
 msgstr ""
 
 msgid "OK"
 msgstr ""
 
+msgid "Pinned"
+msgstr ""
+
+msgid "Recent History"
+msgstr ""
+
+msgid "Clipboard is empty"
+msgstr ""
+
 msgid "Preferences"
 msgstr ""
 
-msgid "Recent usage"
+msgid "Maximum size of history:"
 msgstr ""
 
-msgid "Shortcuts"
+msgid "Sort history by:"
 msgstr ""
 
-msgid "This operation cannot be undone."
+msgid "Read clipboard by timer:"
 msgstr ""
 
 msgid "Timer interval (Millisecond):"
 msgstr ""
 
-msgid "Type here to search..."
+msgid "Save only pinned items:"
+msgstr ""
+
+msgid "Show notifications"
+msgstr ""
+
+msgid "Privacy"
+msgstr ""
+
+msgid "Blacklisted App IDs"
+msgstr ""
+
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+msgid "Use formats like <Super>v, <Control><Alt>c, etc."
+msgstr ""
+
+msgid "Toggle History Menu"
+msgstr ""
+
+msgid "Toggle Private Mode"
+msgstr ""
+
+msgid "Select Next Item"
+msgstr ""
+
+msgid "Select Previous Item"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "New shortcut..."
+msgstr ""
+
+msgid "Search clipboard..."
 msgstr ""

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gnome-clipboard\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-11 01:41+0800\n"
-"PO-Revision-Date: 2026-06-05 18:31+0300\n"
+"POT-Creation-Date: 2026-06-05 18:44+0300\n"
+"PO-Revision-Date: 2026-06-05 18:56+0300\n"
 "Last-Translator: DUB1401 <vlad.milosta@outlook.com>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -18,53 +18,128 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.9\n"
 
-msgid "Are you sure you want to remove all items?"
-msgstr "Вы уверены, что хотите удалить все элементы?"
+msgid "Previous Item"
+msgstr "Предыдущий элемент"
 
-msgid "Cancel"
-msgstr "Отмена"
+msgid "Next Item"
+msgstr "Следующий элемент"
 
-msgid "Clear history?"
-msgstr "Очистить историю?"
+msgid "Private Mode"
+msgstr "Приватный режим"
+
+msgid "Pin Current Item"
+msgstr "Закрепить текущий элемент"
+
+msgid "Clear History"
+msgstr "Очистить историю"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Service"
+msgstr ""
+
+msgid "Clipboard"
+msgstr "Буфер обмена"
 
 msgid "Clipboard updated"
 msgstr "Буфер обмена обновлён"
 
-msgid "Copy time"
-msgstr "Время копирования"
+msgid "Clear history?"
+msgstr "Очистить историю?"
+
+msgid "Are you sure you want to remove all items?"
+msgstr "Вы уверены, что хотите удалить все элементы?"
 
 msgid "Empty"
 msgstr "Очистить"
 
-msgid "Enable"
-msgstr "Включить"
-
-msgid "Gnome Clipboard"
-msgstr ""
-
-msgid "Maximum size of history:"
-msgstr "Максимальный размер истории:"
-
-msgid "Most usage"
-msgstr "Часто используемые"
+msgid "Cancel"
+msgstr "Отмена"
 
 msgid "OK"
 msgstr "ОК"
 
+msgid "Pinned"
+msgstr "Закреплено"
+
+msgid "Recent History"
+msgstr "Недавние"
+
+msgid "Clipboard is empty"
+msgstr "Буфер обмена пуст"
+
 msgid "Preferences"
-msgstr "Настройки"
+msgstr "Параметры"
 
-msgid "Recent usage"
-msgstr "Недавно использованные"
+msgid "Maximum size of history:"
+msgstr "Максимальный размер истории:"
 
-msgid "Shortcuts"
-msgstr "Сочетания клавиш"
+msgid "Sort history by:"
+msgstr "Сортировать историю по:"
 
-msgid "This operation cannot be undone."
-msgstr "Очищенные данные невозможно восстановить."
+msgid "Read clipboard by timer:"
+msgstr "Считывать буфер обмена по таймеру:"
 
 msgid "Timer interval (Millisecond):"
 msgstr "Интервал (в миллисекундах):"
 
-msgid "Type here to search..."
-msgstr "Введите для поиска..."
+msgid "Save only pinned items:"
+msgstr "Сохранять только закреплённые элементы:"
+
+msgid "Show notifications"
+msgstr "Показывать уведомления"
+
+msgid "Privacy"
+msgstr "Приватность"
+
+msgid "Blacklisted App IDs"
+msgstr "ID приложений чёрного списка"
+
+msgid "Keyboard Shortcuts"
+msgstr "Сочетания клавиш"
+
+msgid "Use formats like <Super>v, <Control><Alt>c, etc."
+msgstr "Используйте формат наподобие <Super>v, <Control><Alt>c, и т.д."
+
+msgid "Toggle History Menu"
+msgstr "Переключить меню истории"
+
+msgid "Toggle Private Mode"
+msgstr "Переключить приватный режим"
+
+msgid "Select Next Item"
+msgstr "Выбрать следующий элемент"
+
+msgid "Select Previous Item"
+msgstr "Выбрать предыдущий элемент"
+
+msgid "None"
+msgstr ""
+
+msgid "New shortcut..."
+msgstr "Новое сочетание клавиш..."
+
+msgid "Search clipboard..."
+msgstr "Поиск..."
+
+#~ msgid "Copy time"
+#~ msgstr "Время копирования"
+
+#~ msgid "Enable"
+#~ msgstr "Включить"
+
+#~ msgid "Most usage"
+#~ msgstr "Часто используемые"
+
+#~ msgid "Recent usage"
+#~ msgstr "Недавно использованные"
+
+#~ msgid "Shortcuts"
+#~ msgstr "Сочетания клавиш"
+
+#~ msgid "This operation cannot be undone."
+#~ msgstr "Очищенные данные невозможно восстановить."
+
+#~ msgid "Type here to search..."
+#~ msgstr "Введите для поиска..."
