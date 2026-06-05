@@ -65,7 +65,7 @@ disable:
 	@echo "$(GREEN)Extension disabled!$(NC)"
 
 update-translations:
-	@xgettext -L JavaScript --no-wrap --no-location --sort-output --from-code=UTF-8 -k_ -kN_ -o $(POT_FILE) $(DIST_DIR)/*.js --package-name $(EXT_NAME)
+	@xgettext -L JavaScript --no-wrap --no-location --sort-by-file --from-code=UTF-8 -k_ -kN_ -o $(POT_FILE) $(DIST_DIR)/*.js --package-name $(EXT_NAME)
 	@for f in ./po/*.po ; do \
 		msgmerge --no-location -N $$f $(POT_FILE) -o $$f ;\
 	done
