@@ -7,6 +7,7 @@ import Gio from 'gi://Gio';
 import St from 'gi://St';
 import GObject from 'gi://GObject';
 import Clutter from 'gi://Clutter';
+import Meta from 'gi://Meta';
 
 import * as History from './history.js';
 import * as HistoryMenu from './historyMenu.js';
@@ -40,6 +41,7 @@ class ClipboardPanelInternal extends PanelMenu.Button {
   private _openStateChangedID: number = 0;
   private _keyPressEventID: number = 0;
   private _focusTimerID: number = 0;
+  private _selectionOwnerChangedID: number = 0;
   private _menuNeedsRebuild: boolean = true;
 
   constructor(settings: any, _gettext: any, uuid: string, openPrefs: () => void) {
@@ -133,10 +135,32 @@ class ClipboardPanelInternal extends PanelMenu.Button {
   }
 
   private _setupClipboardMonitoring() {
-    this._clipboardTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-        this._checkClipboard();
-        return GLib.SOURCE_CONTINUE;
-    });
+    // A poll wakes the shell -- and the application that owns the clipboard --
+    // twice a second forever, and re-reads the whole clipboard every tick. When
+    // an image is on the clipboard that means transferring and MD5-hashing the
+    // full PNG on the compositor thread, twice a second, indefinitely.
+    //
+    // The selection-owner signal delivers exactly the same information, only
+    // when something actually changes. The timer is kept for the users who
+    // explicitly opted into it via the `clipboard-timer` setting, which was
+    // otherwise being ignored.
+    if (this._settings.clipboardTimer()) {
+        const interval = this._settings.clipboardTimerIntervalInMillisecond();
+        log.info(`polling clipboard every ${interval} ms`);
+        this._clipboardTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval, () => {
+            this._checkClipboard();
+            return GLib.SOURCE_CONTINUE;
+        });
+        return;
+    }
+
+    const selection = global.display.get_selection();
+    this._selectionOwnerChangedID = selection.connect('owner-changed',
+      (_selection: any, selectionType: number) => {
+        if (selectionType === Meta.SelectionType.SELECTION_CLIPBOARD) {
+            this._checkClipboard();
+        }
+      });
   }
 
   private _checkClipboard() {
@@ -332,6 +356,11 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     if (this._keyPressEventID) {
       this._historyMenu.scrollView.disconnect(this._keyPressEventID);
       this._keyPressEventID = 0;
+    }
+
+    if (this._selectionOwnerChangedID) {
+      global.display.get_selection().disconnect(this._selectionOwnerChangedID);
+      this._selectionOwnerChangedID = 0;
     }
 
     super.destroy();
