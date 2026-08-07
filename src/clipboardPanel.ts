@@ -132,6 +132,14 @@ class ClipboardPanelInternal extends PanelMenu.Button {
         this._history.setItems(history);
         this._refresh();
     }
+
+    // Neither monitoring mode reports what is already on the clipboard when the
+    // extension starts: `owner-changed` only fires on a change, and the timer
+    // only fires after a full interval, which the user can set as high as 100 s.
+    // Read it once here so the extension starts in sync with the current
+    // selection -- after the stored history has been restored, so that
+    // setItems() cannot discard the entry this adds.
+    this._checkClipboard();
   }
 
   private _setupClipboardMonitoring() {
