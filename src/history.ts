@@ -36,9 +36,18 @@ export class History {
   }
 
   public trim(total: number) {
+    if (total <= 0) {
+      return;
+    }
+
+    // getSorted() puts pinned items first, then the most recently copied ones,
+    // so everything from `total` onwards is the oldest overflow.
     let arr = this.getSorted(Settings.HISTORY_SORT_COPY_TIME);
     for (let i = total; i < arr.length; ++i) {
-      let item: any = arr.pop();
+      let item = arr[i];
+      if (item.pinned) {
+        continue;
+      }
       this._history.delete(item.id());
     }
   }

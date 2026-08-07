@@ -7,6 +7,7 @@ import Gio from 'gi://Gio';
 import St from 'gi://St';
 import GObject from 'gi://GObject';
 import Clutter from 'gi://Clutter';
+import Meta from 'gi://Meta';
 
 import * as History from './history.js';
 import * as HistoryMenu from './historyMenu.js';
@@ -40,6 +41,8 @@ class ClipboardPanelInternal extends PanelMenu.Button {
   private _openStateChangedID: number = 0;
   private _keyPressEventID: number = 0;
   private _focusTimerID: number = 0;
+  private _selectionOwnerChangedID: number = 0;
+  private _menuNeedsRebuild: boolean = true;
 
   constructor(settings: any, _gettext: any, uuid: string, openPrefs: () => void) {
     super(0.0, _("Clipboard"), false);
@@ -98,10 +101,13 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     // Search box: filter items as user types
     this._searchBox.onTextChanged(this._onSearch.bind(this));
 
-    // Auto-focus search box when menu opens
+    // Build the item list on demand, then auto-focus the search box
     this._openStateChangedID = this.menu.connect('open-state-changed',
       (_menu: any, open: boolean) => {
         if (open) {
+          if (this._menuNeedsRebuild) {
+            this._rebuildMenu();
+          }
           if (this._focusTimerID) GLib.source_remove(this._focusTimerID);
           this._focusTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
             this._searchBox.setText('');
@@ -124,15 +130,45 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     let history = await this._store.load();
     if (history && history.length > 0) {
         this._history.setItems(history);
-        this._rebuildMenu();
+        this._refresh();
     }
+
+    // Neither monitoring mode reports what is already on the clipboard when the
+    // extension starts: `owner-changed` only fires on a change, and the timer
+    // only fires after a full interval, which the user can set as high as 100 s.
+    // Read it once here so the extension starts in sync with the current
+    // selection -- after the stored history has been restored, so that
+    // setItems() cannot discard the entry this adds.
+    this._checkClipboard();
   }
 
   private _setupClipboardMonitoring() {
-    this._clipboardTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-        this._checkClipboard();
-        return GLib.SOURCE_CONTINUE;
-    });
+    // A poll wakes the shell -- and the application that owns the clipboard --
+    // twice a second forever, and re-reads the whole clipboard every tick. When
+    // an image is on the clipboard that means transferring and MD5-hashing the
+    // full PNG on the compositor thread, twice a second, indefinitely.
+    //
+    // The selection-owner signal delivers exactly the same information, only
+    // when something actually changes. The timer is kept for the users who
+    // explicitly opted into it via the `clipboard-timer` setting, which was
+    // otherwise being ignored.
+    if (this._settings.clipboardTimer()) {
+        const interval = this._settings.clipboardTimerIntervalInMillisecond();
+        log.info(`polling clipboard every ${interval} ms`);
+        this._clipboardTimerID = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval, () => {
+            this._checkClipboard();
+            return GLib.SOURCE_CONTINUE;
+        });
+        return;
+    }
+
+    const selection = global.display.get_selection();
+    this._selectionOwnerChangedID = selection.connect('owner-changed',
+      (_selection: any, selectionType: number) => {
+        if (selectionType === Meta.SelectionType.SELECTION_CLIPBOARD) {
+            this._checkClipboard();
+        }
+      });
   }
 
   private _checkClipboard() {
@@ -145,7 +181,7 @@ class ClipboardPanelInternal extends PanelMenu.Button {
         try {
             if (text && text.trim().length > 0) {
                 if (this._addClipboard(text)) {
-                    this._rebuildMenu();
+                    this._refresh();
                     this._saveHistoryDebounced();
                 }
             } else {
@@ -178,7 +214,7 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     if (path) {
         this._selectedID = id;
         this._addToHistory("", 1, false, Date.now(), Date.now(), ClipboardItem.ClipboardItemType.IMAGE, path);
-        this._rebuildMenu();
+        this._refresh();
         this._saveHistoryDebounced();
     }
   }
@@ -218,7 +254,7 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     }
     
     this._selectedID = item.id();
-    this._rebuildMenu();
+    this._refresh();
 
     if (this._settings.showNotifications()) {
       Main.notify(_("Clipboard updated"), item.display());
@@ -250,11 +286,37 @@ class ClipboardPanelInternal extends PanelMenu.Button {
       if (prev) this._copyToClipboard(prev);
   }
 
-  private _rebuildMenu() {
-    this._historyMenu.rebuildMenu(this._history.getSorted(this._settings.historySort()), this._selectedID);
-    this._onSearch();
+  // Called whenever the history changes.
+  //
+  // Rebuilding the popup means destroying and recreating one menu item per
+  // history entry, and every item is a dozen St widgets that each need a full
+  // CSS cascade. With a few hundred entries that is hundreds of milliseconds
+  // of work on the compositor thread -- far too expensive to spend on every
+  // clipboard change for a menu that is usually closed and invisible.
+  //
+  // So only the cheap, always-needed state is updated here; the widgets are
+  // rebuilt lazily the next time the menu is actually opened.
+  private _refresh() {
+    this._history.trim(this._settings.historySize());
+
+    const sorted = this._history.getSorted(this._settings.historySort());
+
+    this._historyMenu.updateNavigation(sorted, this._selectedID);
     this._actionBar.enablePrevButton(this._historyMenu.hasPrevItem());
     this._actionBar.enableNextButton(this._historyMenu.hasNextItem());
+
+    this._menuNeedsRebuild = true;
+    if (this.menu.isOpen) {
+      this._rebuildMenu(sorted);
+    }
+  }
+
+  private _rebuildMenu(sorted?: Array<ClipboardItem.ClipboardItem>) {
+    this._historyMenu.rebuildMenu(
+      sorted ?? this._history.getSorted(this._settings.historySort()),
+      this._selectedID);
+    this._onSearch();
+    this._menuNeedsRebuild = false;
   }
 
   private _onSearch() {
@@ -264,13 +326,13 @@ class ClipboardPanelInternal extends PanelMenu.Button {
 
   private _onPinItem(item: ClipboardItem.ClipboardItem) {
       item.pinned = !item.pinned;
-      this._rebuildMenu();
+      this._refresh();
       this._saveHistoryDebounced();
   }
 
   private _onRemoveItem(item: ClipboardItem.ClipboardItem) {
       this._history.delete(item.id());
-      this._rebuildMenu();
+      this._refresh();
       this._saveHistoryDebounced();
   }
 
@@ -286,7 +348,7 @@ class ClipboardPanelInternal extends PanelMenu.Button {
   private _doClearHistory(){
     this._history.clear();
     this._store.save([]);
-    this._rebuildMenu();
+    this._refresh();
   }
 
   destroy() {
@@ -302,6 +364,11 @@ class ClipboardPanelInternal extends PanelMenu.Button {
     if (this._keyPressEventID) {
       this._historyMenu.scrollView.disconnect(this._keyPressEventID);
       this._keyPressEventID = 0;
+    }
+
+    if (this._selectionOwnerChangedID) {
+      global.display.get_selection().disconnect(this._selectionOwnerChangedID);
+      this._selectionOwnerChangedID = 0;
     }
 
     super.destroy();

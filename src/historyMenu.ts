@@ -38,12 +38,32 @@ export class HistoryMenu
     this._headers = new Map();
   }
 
+  // Keyboard navigation only depends on the sorted history and the current
+  // selection, not on the widgets. Keeping it separate from rebuildMenu() lets
+  // the shortcuts keep working while the popup is closed and unbuilt.
+  public updateNavigation(
+    history: Array<ClipboardItem.ClipboardItem>,
+    selectedID: number) {
+
+    this._nextItem = null;
+    this._prevItem = null;
+
+    const index = history.findIndex(h => h.id() === selectedID);
+    if (index < 0) {
+      return;
+    }
+
+    if (index - 1 >= 0) {
+      this._nextItem = history[index - 1];
+    }
+    if (index + 1 < history.length) {
+      this._prevItem = history[index + 1];
+    }
+  }
+
   public rebuildMenu(
     history: Array<ClipboardItem.ClipboardItem>,
     selectedID: number) {
-    
-    this._nextItem = null;
-    this._prevItem = null;
 
     if (history.length === 0) {
         super.removeAll();
@@ -63,7 +83,7 @@ export class HistoryMenu
     if (pinned.length > 0) {
       this._addHeader(_("Pinned"));
       pinned.forEach((info) => {
-        this._addItem(info, selectedID, history);
+        this._addItem(info, selectedID);
       });
       super.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     }
@@ -71,7 +91,7 @@ export class HistoryMenu
     if (recent.length > 0) {
       this._addHeader(_("Recent History"));
       recent.forEach((info) => {
-        this._addItem(info, selectedID, history);
+        this._addItem(info, selectedID);
       });
     }
   }
@@ -86,7 +106,7 @@ export class HistoryMenu
       super.addMenuItem(header);
   }
 
-  private _addItem(info: ClipboardItem.ClipboardItem, selectedID: number, history: Array<ClipboardItem.ClipboardItem>) {
+  private _addItem(info: ClipboardItem.ClipboardItem, selectedID: number) {
     let item = new MenuItem.MenuItem(info,
       this.onActivateItem.bind(this),
       this.onPinItem.bind(this),
@@ -96,14 +116,6 @@ export class HistoryMenu
 
     if (info.id() == selectedID) {
       (item as any).add_style_class_name('selected');
-      
-      let index = history.findIndex(h => h.id() === info.id());
-      if (index - 1 >= 0) {
-        this._nextItem = history[index - 1];
-      }
-      if (index + 1 < history.length) {
-        this._prevItem = history[index + 1];
-      }
     } else {
       (item as any).remove_style_class_name('selected');
     }
